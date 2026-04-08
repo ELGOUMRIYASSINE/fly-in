@@ -12,7 +12,15 @@
 #         if valid_lines != 1 and not  4 <= len(value) <= 6:
 #             print(value)
 #             raise ValueError("Error: there is more then 3 zone state!")
-# def hub_checker():
+def validate_hub(line, current):
+    line = line.strip()
+    key, value = line.split(":")
+    value = value.strip().split(" ")
+    if current != 1 and key.strip() in ["hub", "start_hub", "end_hub"]:
+        name , x, y = value[0], value[1], value[2]
+        print(name, x , y)
+        if not x.isdigit() or not y.isdigit():
+            raise ValueError("Error: x, y must be integers values")
 
     
     
@@ -34,11 +42,12 @@ def parser(input_file):
                 continue
             # split the line for two key and value from 
             valid_lines += 1
-            # try:
-            #     # check_structur(line, valid_lines)
-            # except Exception as e:
-            #     print(f"Error: {e} in line {line_number}")
-            #     exit()
+            try:
+                # check_structur(line, valid_lines)
+                validate_hub(line, valid_lines)
+            except Exception as e:
+                print(f"Error: {e} in line {line_number}")
+                exit()
             line = line.strip()
             key, value = line.split(":", 1)
             key = key.strip()

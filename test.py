@@ -1,6 +1,1 @@
-test = {}
-
-test["testo"] = ["amine", "yassinr"]
-
-print(test)
-
+print("a".isdigit())

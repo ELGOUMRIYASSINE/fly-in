@@ -19,7 +19,7 @@ hub: gate_hell5 5 0 [color=red max_drones=1]
 hub: maze_trap_a1 1 1 [color=purple]
 hub: maze_trap_a2 2 1 [color=purple]
 hub: maze_trap_a3 3 1 [color=purple]
-hub: maze_dead_a 4 1 [color=black]
+hub: maze_dead_a 4 -1 [color=black]
 
 hub: maze_trap_b1 1 -1 [color=purple]
 hub: maze_trap_b2 2 -1 [color=purple]
