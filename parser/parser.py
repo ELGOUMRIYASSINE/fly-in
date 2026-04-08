@@ -1,15 +1,46 @@
+# def check_structur(line, valid_lines):
+#     if not ":" in line:
+#         print(line)
+#         raise ValueError("Line must be key and value separated with ':' ")
+#     if valid_lines == 1:
+#         if not "nb_drones" in line:
+#             raise ValueError("The first Line must be nb_drones")
+#     key, value = line.split(":")
+#     value = value.strip()
+#     value = value.split(" ")
+#     if key == "hub":
+#         if valid_lines != 1 and not  4 <= len(value) <= 6:
+#             print(value)
+#             raise ValueError("Error: there is more then 3 zone state!")
+# def hub_checker():
+
+    
+    
+
+
 def parser(input_file):
+    line_number = 0
+    valid_lines = 0
     config_space = {}
     config_space["hubs"] = []
     config_space["connections"] = []
     with open(input_file, "r") as file:
         for line in file:
-            # overwrite comments and lines that does not have :
-            if ":" not in line or line.startswith("#"):
-                continue
-            # split the line for two key and value from :
+            line_number += 1
             line = line.strip()
-            key, value = line.split(":")
+            if line.startswith("#"):
+                continue
+            if not line:
+                continue
+            # split the line for two key and value from 
+            valid_lines += 1
+            # try:
+            #     # check_structur(line, valid_lines)
+            # except Exception as e:
+            #     print(f"Error: {e} in line {line_number}")
+            #     exit()
+            line = line.strip()
+            key, value = line.split(":", 1)
             key = key.strip()
             hub_cordinates = {}
             # get the hub data and set the zone informations in dict
@@ -54,7 +85,6 @@ def parser(input_file):
         else:
             print(key, line)
         print()
-    # print(config_space)
         
 
 
