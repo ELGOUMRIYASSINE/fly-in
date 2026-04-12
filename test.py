@@ -1,6 +1,22 @@
-value = "hub1   10   20   [zone data]"
+import re
 
-before_bracket = value.split("[", 1)[1]
-meta_data = before_bracket.strip().split()
+# # test = "azzzl"
 
-print(meta_data)
+# # check = re.match(r'^[a-zA-Z]+$', test)
+# # check_two = re.search(r'[a-c]$', test)
+
+# print(bool(re.match("^[\d+]$", "12")))
+# print(bool(re.match(r"\d+", "123")))
+
+print(bool(re.match(r"abc", "abc")))
+
+print(r"yassine \d hello world")
+
+test = {
+    "color": "red",
+    "type": "no_fly_zone",
+    "max_drones": 5
+}
+
+if "color" in test:
+    print("true yassine")
