@@ -18,6 +18,22 @@ def validate_meta_value(meta_key, meta_value):
             raise ParsingError(f"Invalid zone value '{meta_value}'. Zone must be one of: {', '.join(zone_values)}")
 
 
+def validate_connection(value, use_default):
+    if "-" not in value:
+        raise ParsingError("Connection definition must contain a '-' character to separate 'from' and 'to' hubs")
+    if value.count("-") > 1:
+        raise ParsingError("Connection definition must contain only one '-' character to separate 'from' and 'to' hubs")
+    if not use_default:
+        hubs, meta = value.strip().split("[", 1)
+        hubs , meta = hubs.strip(), meta.replace("]", "")
+        from_hub, to_hub = hubs.split("-", 1)
+        if not from_hub.strip() or not to_hub.strip():
+            raise ParsingError("There is no hubs providede ==> [hub_1-hub_2]")             
+        if not hubs.strip():
+            raise ParsingError("Connection definition must contain 'from' and 'to' hubs before the metadata")
+        print(hubs, meta)
+
+
 def validate_order(line):
     use_default = False
     keys = ["hub", "start_hub", "end_hub", "connection", "nb_drones"]
@@ -26,6 +42,12 @@ def validate_order(line):
     if line.count(":") > 1:
         raise ParsingError("Line must contain only one ':' character to separate key and value")
     key, value = line.split(":", 1)
+    if ("[" not in value and "]" in value) or ("[" in value and "]" not in value):
+        raise ParsingError(f"{key.capitalize()} definition (metadata) must contain metadata enclosed in square brackets []")
+    if value.count("[") > 1 or value.count("]") > 1:
+        raise ParsingError(f"{key.capitalize()} definition (metadata) must contain only one pair of square brackets []")
+    if value.count("[") == 1 and value.count("]") == 1 and value.index("[") > value.index("]"):
+        raise ParsingError(f"{key.capitalize()} definition (metadata) must have the format: name x y [key=value ...]")
     if "[" in value:
         bracket_pos = value.index("[")
         if bracket_pos > 0 and value[bracket_pos - 1] != " ":
@@ -33,22 +55,16 @@ def validate_order(line):
                 f"Missing space before '[' in metadata. "
                 f"Got '{value.strip()}'. Expected a space before '[metadata]'."
             )
-    if value.count("[") == 1 and value.count("]") == 1 and value.index("[") > value.index("]"):
-        raise ParsingError("Hub definition (metadata) must have the format: name x y [key=value ...]")
+    if value.count("[") == 0 and value.count("]") == 0:
+        use_default = True
+        fields = value.strip()
     key = key.strip()
     if key not in keys:
         raise ParsingError(f"Invalid key '{key}'. Expected one of: {', '.join(keys)}")
 
     # validate fields and meta data
     if key in ["hub", "start_hub", "end_hub"]:
-        if ("[" not in value and "]" in value) or ("[" in value and "]" not in value):
-            raise ParsingError("Hub definition (metadata) must contain metadata enclosed in square brackets []")
-        elif value.count("[") > 1 or value.count("]") > 1:
-            raise ParsingError("Hub definition (metadata) must contain only one pair of square brackets []")
-        elif value.count("[") == 0 and value.count("]") == 0:
-            use_default = True
-            fields = value.strip()
-        else:
+        if not use_default:
             fields, meta = value.strip().split("[", 1)
         count = len(fields.strip().split(" "))
         if count != 3:
@@ -69,8 +85,12 @@ def validate_order(line):
                         raise ParsingError(f"Invalid metadata format '{item}'. Expected key=value pairs.")
                     meta_key, meta_value = item.split("=", 1)
                     validate_meta_value(meta_key, meta_value)
-        else:
-            meta = None
+    if key == "connection":
+        if not use_default:
+            fields, meta = value.strip().split("[", 1)
+        validate_connection(value, use_default)
+        
+
     return use_default
             
 
@@ -84,11 +104,6 @@ def parser(input_file):
         "nb_drones": 0,
         "start_hub": 0,
         "end_hub": 0
-    } 
-    default_meta = {
-        "color": "white",
-        "type": "normal",
-        "max_drones": 0
     }
     with open(input_file, "r") as file:
         for line in file:
@@ -152,16 +167,16 @@ def parser(input_file):
             else:
                 config_space[key] = value
 
-    for key, line in config_space.items():
-        if key == "hubs":
-            for dic in line:
-                print(dic)
-        elif key == "connections":
-            for con in line:
-                print(con)
-        else:
-            print(key, line)
-        print()
+    # for key, line in config_space.items():
+    #     if key == "hubs":
+    #         for dic in line:
+    #             print(dic)
+    #     elif key == "connections":
+    #         for con in line:
+    #             print(con)
+    #     else:
+    #         print(key, line)
+    #     print()
         
 
 
