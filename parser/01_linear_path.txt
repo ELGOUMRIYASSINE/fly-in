@@ -1,7 +1,8 @@
 # hello world
 nb_drones: 5
 
-start_hub: hub 10 l []
+start_hub: hub 10 9[color=hiba] # slm yassine
+
 
 end_hub: goal 10 10 [color=yellow]
 
