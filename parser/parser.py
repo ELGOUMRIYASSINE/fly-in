@@ -167,21 +167,21 @@ def parser(input_file):
             else:
                 config_space[key] = value
 
-    # for key, line in config_space.items():
-    #     if key == "hubs":
-    #         for dic in line:
-    #             print(dic)
-    #     elif key == "connections":
-    #         for con in line:
-    #             print(con)
-    #     else:
-    #         print(key, line)
-    #     print()
+    for key, line in config_space.items():
+        if key == "hubs":
+            for dic in line:
+                print(dic)
+        elif key == "connections":
+            for con in line:
+                print(con)
+        else:
+            print(key, line)
+        print()
         
 
 
 
 try:
-    parser("03_ultimate_challenge.txt")
+    parser("01_linear_path.txt")
 except ParsingError as e:
     print(f"Parsing Error: {e}")
