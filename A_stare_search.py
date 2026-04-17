@@ -1,11 +1,7 @@
 from enum  import Enum
 import graph_builder_test
+import math
 
-class ZoneType(Enum):
-    NORMAL = "NORMAL"
-    BLOCKED = "BLOCKED"
-    RESTRICTED = "RESTRICTED"
-    PRIORITY = "PRIORITY"
 
 class DroneState(Enum):
     WAITING = "WAITING"
@@ -34,7 +30,7 @@ class Graph():
     def __init__(self):
         self.hubs = []
         self.connections = []
-    
+
 class Drone():
     def __init__(self, id, state, current_hub, path, turns_transit):
         self.id = id
@@ -45,7 +41,19 @@ class Drone():
 
 
 graph, nb_drones = graph_builder_test.build_graph()
-for i in graph.connections:
-    print(f"{i.zone_a.neighbors} linked with {i.zone_b.neighbors}")
+class AStarSearch:
+    def __init__(self, graph: Graph):
+        self.graph = graph
+        self.start = graph.start
+        self.end = graph.end
     
-print(graph.connections[0].zone_a)
+    # get the heuristic value by calculating the distance between the current zone and the end zone
+    def heuristic(self) -> list[int]:
+        heauristic_values = {}
+        for zone in self.graph.zones.values():
+            heauristic_values[zone.name] = round(math.sqrt((self.end.x - zone.x)**2 + (self.end.y - zone.y)**2), 2)
+        return heauristic_values
+
+test  = AStarSearch(graph)
+print(test.heuristic())
+
