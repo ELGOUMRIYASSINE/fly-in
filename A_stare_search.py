@@ -1,35 +1,8 @@
 from enum  import Enum
 import graph_builder_test
+from graph_builder_test import Graph
 import math
-
-
-class DroneState(Enum):
-    WAITING = "WAITING"
-    FLYING = "FLYING"
-    IN_TRANSITE = "IN_TRANSITE"
-
-class Zone():
-    def __init__(self, name, x, y, zone_type, color, current_drones, max_drones):
-        self.name = name
-        self.x = x
-        self.y = y
-        self.zone_type = zone_type
-        self.color = color
-        self.current_drones = current_drones
-        self.max_drones = max_drones
-
-
-class Connection():
-    def __init__(self, from_hub, to_hub, max_link_capacity, current_drones):
-        self.from_hub = from_hub
-        self.to_hub = to_hub
-        self.max_link_capacity = max_link_capacity
-        self.current_drones = current_drones
-
-class Graph():
-    def __init__(self):
-        self.hubs = []
-        self.connections = []
+import heapq
 
 class Drone():
     def __init__(self, id, state, current_hub, path, turns_transit):
@@ -46,14 +19,21 @@ class AStarSearch:
         self.graph = graph
         self.start = graph.start
         self.end = graph.end
+        self.zone_heap = []
+        self.visited = []
     
     # get the heuristic value by calculating the distance between the current zone and the end zone
     def heuristic(self) -> list[int]:
-        heauristic_values = {}
-        for zone in self.graph.zones.values():
-            heauristic_values[zone.name] = round(math.sqrt((self.end.x - zone.x)**2 + (self.end.y - zone.y)**2), 2)
-        return heauristic_values
+        self.graph.heuristic()
+        # print([zone.distance_to_goal for zone in self.graph.zones.values()])
+    def push_heap(self, cost):
+        heapq.heappush(self.zone_heap, cost)
+    def pop_heap(self):
+        return heapq.heappop(self.zone_heap)
 
-test  = AStarSearch(graph)
-print(test.heuristic())
+    
+    
 
+A_start = AStarSearch(graph)
+
+A_start.heuristic()

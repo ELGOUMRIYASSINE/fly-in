@@ -1,5 +1,7 @@
+from __future__ import annotations
 from enum import Enum
 from typing import Dict, List
+import math
 
 
 # ---------------- ENUM ----------------
@@ -12,22 +14,30 @@ class ZoneType(Enum):
 
 # ---------------- ZONE ----------------
 class Zone:
+    zone_state_cost = {"NORMAL":1, "BLOCKED":-1, "RESTRICTED":2, "PRIORITY":0.9}
     def __init__(
         self,
         name: str,
         x: int,
         y: int,
+        parent_zone: Zone = None,
+        distance_to_goal: int = 0,
         zone_type: ZoneType = ZoneType.NORMAL,
+        total_cost: int = None,
         color: str | None = None,
         max_drones: int = 1
     ):
         self.name: str = name
+        self.distance_to_goal: int = distance_to_goal
         self.x: int = x
         self.y: int = y
         self.zone_type: ZoneType = zone_type
+        self.zone_cost = self.zone_state_cost[self.zone_type.name]
+        self.total_cost = total_cost
         self.color: str | None = color
         self.max_drones: int = max_drones
         self.current_drones: int = 0
+        self.parent_zone = parent_zone
         self.neighbors: List["Zone"] = []
 
     def add_neighbor(self, zone: "Zone") -> None:
@@ -61,6 +71,7 @@ class Graph:
         self.connections: List[Connection] = []
         self.start: Zone | None = None
         self.end: Zone | None = None
+        self.zones_total_cost = {}
 
     def add_zone(self, zone: Zone) -> None:
         self.zones[zone.name] = zone
@@ -71,8 +82,14 @@ class Graph:
 
         a.add_neighbor(b)
         b.add_neighbor(a)
-
         self.connections.append(Connection(a, b, capacity))
+    
+    def heuristic(self) -> list[int]:
+        for zone in self.zones.values():
+            zone.distance_to_goal = round(math.sqrt((self.end.x - zone.x)**2 + (self.end.y - zone.y)**2), 2)
+            zone.total_cost = zone.distance_to_goal + zone.zone_cost
+            self.zones_total_cost[zone.name] = zone.total_cost
+        print(self.zones_total_cost)
 
 
 # ---------------- BUILD GRAPH ----------------
