@@ -14,7 +14,7 @@ class ZoneType(Enum):
 
 # ---------------- ZONE ----------------
 class Zone:
-    zone_state_cost = {"NORMAL":1, "BLOCKED":-1, "RESTRICTED":2, "PRIORITY":0.9}
+    zone_state_cost = {"NORMAL":1, "BLOCKED":9999999, "RESTRICTED":2, "PRIORITY":0.9}
     def __init__(
         self,
         name: str,
@@ -37,7 +37,6 @@ class Zone:
         self.color: str | None = color
         self.max_drones: int = max_drones
         self.current_drones: int = 0
-        self.parent_zone = parent_zone
         self.neighbors: List["Zone"] = []
 
     def add_neighbor(self, zone: "Zone") -> None:
@@ -88,36 +87,34 @@ class Graph:
         for zone in self.zones.values():
             zone.distance_to_goal = round(math.sqrt((self.end.x - zone.x)**2 + (self.end.y - zone.y)**2), 2)
             zone.total_cost = zone.distance_to_goal + zone.zone_cost
-            self.zones_total_cost[zone.name] = zone.total_cost
-        print(self.zones_total_cost)
+            self.zones_total_cost[zone.name] = (zone.total_cost, zone.name, zone)
 
 
 # ---------------- BUILD GRAPH ----------------
 def build_graph() -> tuple[Graph, int]:
     graph = Graph()
 
-    # Create zones
-    start = Zone("start", 0, 0, color="green", max_drones=9999)  # start = unlimited
-    junction = Zone("junction", 1, 0, color="yellow", max_drones=2)
-    path_a = Zone("path_a", 2, 1, color="blue", max_drones=1)
-    path_b = Zone("path_b", 2, -1, color="blue", max_drones=1)
-    goal = Zone("goal", 3, 0, color="red", max_drones=3)
+    start = Zone("start", 0, 0)
+    a = Zone("a", 1, 0)
+    b = Zone("b", 2, 0)
+    c = Zone("c", 3, 0)  # long path
+    d = Zone("d", 1, 1)  # shortcut
+    goal = Zone("goal", 2, 1)
 
-    # Add zones to graph
-    for zone in [start, junction, path_a, path_b, goal]:
-        graph.add_zone(zone)
+    for z in [start, a, b, c, d, goal]:
+        graph.add_zone(z)
 
-    # Define start & end
     graph.start = start
     graph.end = goal
 
-    # Create connections
-    graph.connect("start", "junction")
-    graph.connect("junction", "path_a")
-    graph.connect("junction", "path_b")
-    graph.connect("path_a", "goal")
-    graph.connect("path_b", "goal")
+    # long path
+    graph.connect("start", "a")
+    graph.connect("a", "b")
+    graph.connect("b", "c")
+    graph.connect("c", "goal")
 
-    nb_drones = 3
+    # short path
+    graph.connect("start", "d")
+    graph.connect("d", "goal")
 
-    return graph, nb_drones
+    return graph, 1
