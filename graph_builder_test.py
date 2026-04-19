@@ -94,27 +94,38 @@ class Graph:
 def build_graph() -> tuple[Graph, int]:
     graph = Graph()
 
-    start = Zone("start", 0, 0)
-    a = Zone("a", 1, 0)
-    b = Zone("b", 2, 0)
-    c = Zone("c", 3, 0)  # long path
-    d = Zone("d", 1, 1)  # shortcut
-    goal = Zone("goal", 2, 1)
+    start = Zone("start", 0, 0, zone_type=ZoneType.NORMAL)
 
-    for z in [start, a, b, c, d, goal]:
+    a = Zone("a", 1, 0, zone_type=ZoneType.BLOCKED)
+    b = Zone("b", 2, 0, zone_type=ZoneType.NORMAL)
+
+    c = Zone("c", 1, -1, zone_type=ZoneType.RESTRICTED)
+    d = Zone("d", 2, -1, zone_type=ZoneType.NORMAL)
+
+    e = Zone("e", 1, 1, zone_type=ZoneType.PRIORITY)
+    f = Zone("f", 2, 1, zone_type=ZoneType.NORMAL)
+
+    goal = Zone("goal", 3, 0, zone_type=ZoneType.NORMAL)
+
+    for z in [start, a, b, c, d, e, f, goal]:
         graph.add_zone(z)
 
     graph.start = start
     graph.end = goal
 
-    # long path
+    # ❌ BLOCKED path
     graph.connect("start", "a")
     graph.connect("a", "b")
-    graph.connect("b", "c")
-    graph.connect("c", "goal")
+    graph.connect("b", "goal")
 
-    # short path
-    graph.connect("start", "d")
+    # ⚠️ RESTRICTED path
+    graph.connect("start", "c")
+    graph.connect("c", "d")
     graph.connect("d", "goal")
+
+    # ⭐ PRIORITY path
+    graph.connect("start", "e")
+    graph.connect("e", "f")
+    graph.connect("f", "goal")
 
     return graph, 1
