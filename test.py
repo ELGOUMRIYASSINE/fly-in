@@ -1,5 +1,3 @@
-test = ("yassine", "amine", "hiba")
+test = {"A":10, "Z":10, "C":10}
 
-if "yassine" not in test:
-    print("hello")
-
+print(max(test))

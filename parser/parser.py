@@ -120,7 +120,7 @@ def parser(input_file):
             else:
                 line = line.strip()
             try:
-                meta_state = validate_order(line)
+                meta_state = validate_order(lipath_ane)
             except ParsingError as e:
                 print(f"Parsing Error: {e} in line {line_number}")
                 exit()

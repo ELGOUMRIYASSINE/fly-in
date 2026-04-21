@@ -4,14 +4,6 @@ from graph_builder_test import Graph
 import math
 import heapq
 
-class Drone():
-    def __init__(self, id, state, current_hub, path, turns_transit):
-        self.id = id
-        self.state = state
-        self.current_hub = current_hub
-        self.path = []
-        self.turns_transit = turns_transit
-
 
 graph, nb_drones = graph_builder_test.build_graph()
 class AStarSearch:
@@ -23,6 +15,7 @@ class AStarSearch:
         self.visited = set()
         self.came_from = {}
         self.begin = True
+        self.path = []
     
     # get the heuristic value by calculating the distance between the current zone and the end zone
     def heuristic(self) -> list[int]:
@@ -33,7 +26,13 @@ class AStarSearch:
     def pop_heap(self):
         return heapq.heappop(self.zone_heap)
     def extract_path(self):
-        pass
+        current = self.end.name
+        while True:
+            self.path.append(self.came_from)
+            if name == current:
+                self.path.append(name)
+                current = came_from
+        print(self.path)
     def add_came_from(self, zone_name, from_name):
         self.came_from[zone_name] = from_name
     def find(self):
@@ -58,8 +57,8 @@ class AStarSearch:
                         if zone.name not in self.visited:
                             self.push_heap(zone.name)
                             self.add_came_from(zone.name, current_zone[2].name)
-        print(self.came_from)
-
-A_start = AStarSearch(graph)
-
-A_start.find()
+        self.extract_path()
+        return (self.came_from)
+    
+test = AStarSearch(graph)
+test.find()
