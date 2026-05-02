@@ -1,3 +1,3 @@
-test = {"A":10, "Z":10, "C":10}
+test = ("yassine", 10, "oudi")
 
-print(max(test))
+print(test.name)

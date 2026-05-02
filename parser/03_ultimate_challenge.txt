@@ -44,7 +44,7 @@ hub: overflow_hell2 7 1 [zone=restricted color=maroon max_drones=2]
 hub: overflow_hell3 8 1 [zone=restricted color=maroon max_drones=2]
 hub: overflow_hell4 6 -1 [zone=restricted color=maroon max_drones=2]
 hub: overflow_hell5 7 -1 [zone=restricted color=maroon max_drones=2]
-hub: overflow_hell6 8 -1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell6 8 900000000 [zone=restricted color=maroon max_drones=2]
 
 # === LAYER 3: The False Hope Section ===
 # Priority zones that lead to more traps
@@ -84,6 +84,16 @@ hub: final_torture4 19 0 [color=crimson max_drones=1]
 hub: final_torture5 20 0 [color=crimson max_drones=1]
 
 # The ultimate goal
+# Layer 0 connections (bottleneck hell)
+connection: start-gate_hell1 [max_link_capacity=1]
+connection: - [max_link_capacity=1]
+connection: gate_hell2-gate_hell3 [max_link_capacity=1]
+connection: gate_hell3-gate_hell4 [max_link_capacity=1]
+connection: gate_hell4-gate_hell5 [max_link_capacity=1]
+
+# Layer 1 connections (maze of despair)
+connection: gate_hell1-maze_trap_a1
+connection: gate_hell2-maze_trap_
 end_hub: impossible_goal 21 0 [color=rainbow max_drones=25]
 # === CONNECTIONS: The Web of Suffering ===
 
