@@ -16,6 +16,7 @@ class AStarSearch:
         self.came_from = {}
         self.begin = True
         self.path = []
+        self.g_scores = {}
     
     # get the heuristic value by calculating the distance between the current zone and the end zone
     def heuristic(self) -> list[int]:
@@ -25,42 +26,55 @@ class AStarSearch:
         heapq.heappush(self.zone_heap, (cost, distance_to_goal, zone_name))
     def pop_heap(self):
         return heapq.heappop(self.zone_heap)
-    # def extract_path(self):
-    #     current = self.end.name
-    #     while True:
-    #         self.path.append(self.came_from)
-    #         if name == current:
-    #             self.path.append(name)
-    #             current = came_from
-    #     print(self.path)
+    def extract_path(self):
+        current = self.end.name
+        self.path.append(current)
+        while current != "start":
+            self.path.append(self.came_from[current])
+            current = self.came_from[current]
     def add_came_from(self, zone_name, from_name):
         self.came_from[zone_name] = from_name
     def find(self):
-        order = 0
-        # calculate the cost of all drones 
         self.heuristic()
 
         if self.graph.end:
+            self.g_scores[self.start.name] = 0        
+            self.push_heap(0, 0, graph.start.name)
             while True:
-                if self.begin:
-                    self.begin = False
-                    self.push_heap(graph.start.zone_cost, graph.start.distance_to_goal, graph.start.name)
                 current_zone = self.pop_heap()
                 if current_zone[2] == self.graph.end.name:
-                    # self.graph.end.total_cost =
-                    self.visited.add(self.graph.end.name)               
-                    # self.extract_path()
+                    print(self.g_scores[self.end.name])
                     break
                 else:
                     self.visited.add(current_zone[2])
                     current = self.graph.zones[current_zone[2]]
                     for zone in current.neighbors:
                         if zone.name not in self.visited:
-                            zone.zone_cost =  zone.zone_cost + current.zone_cost
-                            self.push_heap(zone.zone_cost, zone.distance_to_goal, zone.name)
-                            self.add_came_from(zone.name, current_zone[2])
-        # self.extract_path()
+                            if zone.name in self.g_scores:
+                                if self.g_scores[zone.name] > self.g_scores[current.name] + zone.zone_cost:
+                                    self.g_scores[zone.name] = self.g_scores[current.name] + zone.zone_cost
+                                    self.push_heap(self.g_scores[zone.name], zone.zone_cost, zone.name)
+                                    self.add_came_from(zone.name, current_zone[2])
+                            else:                                     
+                                self.g_scores[zone.name] = self.g_scores[current.name] + zone.zone_cost
+                                self.push_heap(self.g_scores[zone.name], zone.zone_cost, zone.name)
+                                self.add_came_from(zone.name, current_zone[2])
+        
         return (self.came_from)
+    def bring_connections(self):
+        connections = {}
+        for i in range(len(self.path) / 2):
+            self.path[0]
+    def drone_mover(self):
+        turns = 0
+        while nb_drones != self.end.current_drones:
+            for name in self.path:
+                if self.graph.zones[name].max_link_capacity_drones == self.graph.zones[name].current_drones:
+                    continue
+                if 
+                
+                
     
 test = AStarSearch(graph)
-print(test.find())
+test.find()
+test.extract_path()
