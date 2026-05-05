@@ -1,9 +1,8 @@
 import A_stare_search
-from enum  import Enum
 import graph_builder_test
-from graph_builder_test import Graph
-import math
-import heapq
+import graph_builder_test
+import time
+
 
 
 class DroneMover():
@@ -12,6 +11,7 @@ class DroneMover():
         self.graph = graph
         self.drones_numebr = drones_number
         self.path = path
+        self.turns = 0
     def bring_connections(self, start_point, end_point):
         used_connections = {}
         if f"{start_point} {end_point}" in used_connections:
@@ -24,37 +24,68 @@ class DroneMover():
         # print(self.path)
         self.graph.create_drones(self.drones_numebr)
         self.graph.start.current_drones = self.drones_numebr
+        self.graph.start.drones_in_station = self.graph.drones
         while graph.end.current_drones != self.drones_numebr:
             # i used -1 beacause i want to compare the current point with the next one
             #  so if i reach the end of the path i will compare the current point with the next one which is the end point
-            for i in range(len(self.path) - 1): 
+            turn = {}
+            for i in range(len(self.path) - 1):
                 current = self.graph.zones[self.path[i]]
                 start_station = self.graph.zones[self.path[i + 1]]
                 connection = self.bring_connections(start_station.name, current.name)
                 # this line is to check if the drone can move to the next station or not if the current 
                 # station has less drones than the max drones or if the current station is the end station
                 if current.current_drones < current.max_drones or current.name == self.graph.end.name:
-                    if current.zone_type == "restricted":
+                    if current.zone_type == graph_builder_test.ZoneType.RESTRICTED:
                         if connection.current_usage > 0:
-                            current.drones_in_station.append(connection.current_drones[0])
+                            # change state for end point
+                            drone = connection.current_drones.pop(0)
+                            drone.my_state = "WAITING"
+                            current.drones_in_station.append(drone)
                             current.current_drones += 1
-                            connection.current_drones.remove(connection.current_drones[0])
+                            # change state for the connection
                             connection.current_usage -= 1
-                            self.drones_history[f"D{}"] = {"connection": current.name}
+                            # add the move to history
+                            # turn[f"D{drone.id}"] = {"connection": current.name}
+                            turn[f"D{drone.id}"] = f"[transit]->{start_station.name}"
+                        elif start_station.current_drones > 0:
+                            drone = start_station.drones_in_station.pop(0)
+                            drone.my_state = "IN_TRANSITE"
+                            connection.current_drones.append(drone)
+                            connection.current_usage += 1
+                            start_station.current_drones -= 1
+                            # turn[f"D{drone.id}"] = {start_station.name: "connection"}
+                            turn[f"D{drone.id}"] = f"{start_station.name}->[transit]"
                     else:
                         if start_station.current_drones > 0:
-                            for drone in range(connection.max_capacity):
-                                current.drones_in_station.append(start_station.drones_in_station[0])
+                            # print("cc")
+                            # exit()
+                            for _ in range(connection.max_capacity):
+                                drone = start_station.drones_in_station.pop(0)
+                                drone.my_state = "WAITING"
+                                current.drones_in_station.append(drone)
                                 current.current_drones += 1
-                                start_station.drones_in_station.remove(start_station.drones_in_station[0])
                                 start_station.current_drones -= 1
-                                self.drones_history[f"D{drone}"] = str(connection)
-                print(self.drones_history)
-                        
+                                # turn[f"D{drone.id}"] = {start_station.name: current.name}
+                                turn[f"D{drone.id}"] = f"{start_station.name}->{current.name}"
+                                # self.drones_history[f"D{drone}"] = str(connection)
+                                if current.max_drones > current.current_drones:
+                                    break
+            self.turns += 1
+            self.drones_history[f"Turn {self.turns}"] = turn
 
-
-            exit()
-                
+        # for turn, move in self.drones_history.values:
+        #     # print(f"{turn}")
+        #     print(turn, move)
+        for turn, moves  in self.drones_history.items():
+            print(f"{turn}", end=" ")
+            for drone, move in moves.items():
+                print(f"{drone}: {move}", end=" ")
+                time.sleep(0.01)
+            print()
+        # print(self.drones_history, end="\n\n")
+        print(f"turns number : {self.turns}")
+        print(self.path)                                  
 
 
 graph, nb_drones = graph_builder_test.build_graph()

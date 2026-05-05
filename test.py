@@ -1,3 +1,3 @@
-lst = ["yassine"]
-lst.append(lst[0])
-print(lst)
+test = {"aa": "yassine"}
+
+print(list(test))
