@@ -1,3 +1,3 @@
-test = ("yassine", 10, "oudi")
-
-print(test.name)
+lst = ["yassine"]
+lst.append(lst[0])
+print(lst)
