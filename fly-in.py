@@ -1,6 +1,8 @@
-import A_stare_search
-import drone_mover
-import graph_builder_test
+import simulation
 
 # class Flyin():
 #     pass
+
+
+if __name__ == "__main__":
+	simulation.main()

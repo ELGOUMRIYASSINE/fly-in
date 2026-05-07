@@ -1,6 +1,5 @@
 import A_stare_search
 import graph_builder_test
-import graph_builder_test
 import time
 
 
@@ -25,7 +24,7 @@ class DroneMover():
         self.graph.create_drones(self.drones_numebr)
         self.graph.start.current_drones = self.drones_numebr
         self.graph.start.drones_in_station = self.graph.drones
-        while graph.end.current_drones != self.drones_numebr:
+        while self.graph.end.current_drones != self.drones_numebr:
             # i used -1 beacause i want to compare the current point with the next one
             #  so if i reach the end of the path i will compare the current point with the next one which is the end point
             turn = {}
@@ -47,15 +46,15 @@ class DroneMover():
                             connection.current_usage -= 1
                             # add the move to history
                             # turn[f"D{drone.id}"] = {"connection": current.name}
-                            turn[f"D{drone.id}"] = f"[transit]->{start_station.name}"
-                        elif start_station.current_drones > 0:
+                            turn[f"D{drone.id}"] = f"[transit]->{current.name}"
+                        if start_station.current_drones > 0:
                             drone = start_station.drones_in_station.pop(0)
                             drone.my_state = "IN_TRANSITE"
                             connection.current_drones.append(drone)
                             connection.current_usage += 1
                             start_station.current_drones -= 1
                             # turn[f"D{drone.id}"] = {start_station.name: "connection"}
-                            turn[f"D{drone.id}"] = f"{start_station.name}->[transit]"
+                            turn[f"D{drone.id}"] = f"{start_station.name}->[transit]->{current.name}"
                     else:
                         if start_station.current_drones > 0:
                             # print("cc")
@@ -77,20 +76,26 @@ class DroneMover():
         # for turn, move in self.drones_history.values:
         #     # print(f"{turn}")
         #     print(turn, move)
-        for turn, moves  in self.drones_history.items():
-            print(f"{turn}", end=" ")
-            for drone, move in moves.items():
-                print(f"{drone}: {move}", end=" ")
-                time.sleep(0.01)
-            print()
-        # print(self.drones_history, end="\n\n")
-        print(f"turns number : {self.turns}")
-        print(self.path)                                  
+        return self.drones_history
 
 
-graph, nb_drones = graph_builder_test.build_graph()
-searcher = A_stare_search.AStarSearch(graph, nb_drones)
-searcher.find()
-mover = DroneMover(graph, nb_drones, searcher.extract_path())  
-mover.drone_mover()              
+def compute_path():
+    graph, nb_drones = graph_builder_test.build_graph()
+    searcher = A_stare_search.AStarSearch(graph, nb_drones)
+    searcher.find()
+    path = searcher.extract_path()
+    return graph, nb_drones, path
+
+
+if __name__ == "__main__":
+    graph, nb_drones, path = compute_path()
+    mover = DroneMover(graph, nb_drones, path)
+    history = mover.drone_mover()
+    for turn, moves in history.items():
+        print(turn, end=" ")
+        for drone, move in moves.items():
+            print(f"{drone}: {move}", end=" ")
+        print()
+    print(f"turns number : {mover.turns}")
+    print(path)
 
