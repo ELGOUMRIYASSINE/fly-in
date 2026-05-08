@@ -1,3 +1,3 @@
-test = {"aa": "yassine"}
-
-print(list(test))
+tst = [1]
+if tst:
+    print("cc")
