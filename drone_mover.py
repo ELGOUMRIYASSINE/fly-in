@@ -9,7 +9,7 @@ class DroneMover():
         self.drones_history = {}
         self.graph = graph
         self.drones_numebr = drones_number
-        self.path = path
+        self.paths = path
         self.turns = 0
     def bring_connections(self, start_point, end_point):
         used_connections = {}
@@ -19,8 +19,36 @@ class DroneMover():
             if connection.zone_a.name == start_point and connection.zone_b.name == end_point:
                 used_connections[f"{start_point} {end_point}"] = connection
                 return connection
+    def get_strategy(self):
+        if len(self.paths) > 1:
+            narrows = []
+            for p in self.paths:
+                is_narrow = False
+                for zone in p:
+                    if self.graph.zones[zone].max_drones == 1:
+                        narrows.append(True)
+                        is_narrow = True
+                        break
+                if not is_narrow:
+                    narrows.append(False)
+            if False not in narrows:
+                return self.path[0]
+            elif True not in narrows:
+                chosen = []
+                for p in self.paths:
+                    chosen.append(p)
+                    if len(chosen) == 3:
+                        break
+                return chosen
+            elif False in narrows:
+                pos = narrows.index(False)
+                if len(self.paths[pos]) == len(self.paths[0]) or  len(self.paths[pos]) <= len(self.paths[0]) + 2:
+                    return self.paths[pos]  
+                else:
+                    return self.paths[0]
+        else:
+            return self.paths[0]
     def drone_mover(self):
-        # print(self.path)
         self.graph.create_drones(self.drones_numebr)
         self.graph.start.current_drones = self.drones_numebr
         self.graph.start.drones_in_station = self.graph.drones
@@ -82,20 +110,22 @@ class DroneMover():
 def compute_path():
     graph, nb_drones = graph_builder_test.build_graph()
     searcher = A_stare_search.AStarSearch(graph, nb_drones)
-    searcher.find()
-    path = searcher.extract_path()
-    return graph, nb_drones, path
+    paths = searcher.get_paths()
+    return graph, nb_drones, paths
 
 
 if __name__ == "__main__":
-    graph, nb_drones, path = compute_path()
-    mover = DroneMover(graph, nb_drones, path)
-    history = mover.drone_mover()
-    for turn, moves in history.items():
-        print(turn, end=" ")
-        for drone, move in moves.items():
-            print(f"{drone}: {move}", end=" ")
-        print()
-    print(f"turns number : {mover.turns}")
-    print(path)
+    graph, nb_drones, paths = compute_path()
+    for p in paths:
+        print(p)
+    mover = DroneMover(graph, nb_drones, paths)
+    mover.get_strategy()
+    # history = mover.drone_mover()
+    # for turn, moves in history.items():
+    #     print(turn, end=" ")
+    #     for drone, move in moves.items():
+    #         print(f"{drone}: {move}", end=" ")
+    #     print()
+    # print(f"turns number : {mover.turns}")
+    # print(path)
 

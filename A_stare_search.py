@@ -47,7 +47,6 @@ class AStarSearch:
         for zone_name in reversed(old_path):
             if zone_name in self.increaesers:
                 picked_zone = zone_name
-                print(picked_zone)
                 self.increaesers.remove(picked_zone)
                 tmp_costs[picked_zone] += 1000
                 break
@@ -97,17 +96,15 @@ class AStarSearch:
             self.g_scores = {}
             self.visited = set()
             self.increase_zone(tmp_costs, founded_path)
-            print(tmp_costs)
             self.find(tmp_costs)
             founded_path = self.extract_path(self.paths_counter)
             if founded_path in self.path:
                 break
             if founded_path not in self.path:
                 self.path.append(founded_path)
-        print(self.path)
-        return self.came_from
+        return self.path
 
 
-graph, drones_nbr = graph_builder_test.build_graph()
-test = AStarSearch(graph, drones_nbr)
-test.get_paths()
+# graph, drones_nbr = graph_builder_test.build_graph()
+# test = AStarSearch(graph, drones_nbr)
+# test.get_paths()
