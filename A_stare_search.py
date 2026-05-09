@@ -44,7 +44,6 @@ class AStarSearch:
             operation_costs[name] = zone.zone_cost
         return operation_costs
     def increase_zone(self, tmp_costs, old_path):
-        # old_path = self.extract_path(self.paths_counter - 1)
         for zone_name in reversed(old_path):
             if zone_name in self.increaesers:
                 picked_zone = zone_name
@@ -52,14 +51,6 @@ class AStarSearch:
                 self.increaesers.remove(picked_zone)
                 tmp_costs[picked_zone] += 1000
                 break
-        # while True:
-        #     if not self.increaesers:
-        #         return
-        #     picked_zone = random.choice(self.increaesers)
-        #     self.increaesers.remove(picked_zone)
-        #     if picked_zone in old_path:
-        #         break            
-        # if picked_zone:
     def find(self, tmp_costs):
         first = False
         if self.paths_counter == 0:
@@ -98,20 +89,21 @@ class AStarSearch:
         
     def get_paths(self):
         tmp_costs = self.fake_costs()
-        for i in range(3):
-            self.find(tmp_costs)
-            founded_path = self.extract_path(self.paths_counter)
-            if founded_path in self.path:
-                break
-            self.path.append(founded_path)
+        self.find(tmp_costs)
+        founded_path = self.extract_path(self.paths_counter)
+        for i in range(len(self.increaesers) + 1):
             self.paths_counter += 1
             self.zone_heap = []
             self.g_scores = {}
             self.visited = set()
-            print(founded_path)
-            # print("before ", self.increaesers)
             self.increase_zone(tmp_costs, founded_path)
-            # print("after ", self.increaesers)
+            print(tmp_costs)
+            self.find(tmp_costs)
+            founded_path = self.extract_path(self.paths_counter)
+            if founded_path in self.path:
+                break
+            if founded_path not in self.path:
+                self.path.append(founded_path)
         print(self.path)
         return self.came_from
 
