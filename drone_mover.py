@@ -1,14 +1,21 @@
 import A_stare_search
 import graph_builder_test
 import time
+import sys
 
 
+class Path()
+    def __init__(self, path, capacity):
+        self.length = len(path)
+        self.capacity = capacity
+        self.sent_drones = 0
 
 class DroneMover():
     def __init__(self, graph, drones_number, path):
         self.drones_history = {}
         self.graph = graph
         self.drones_numebr = drones_number
+        self.drones = graph.drones
         self.paths = path
         self.turns = 0
     def bring_connections(self, start_point, end_point):
@@ -19,35 +26,24 @@ class DroneMover():
             if connection.zone_a.name == start_point and connection.zone_b.name == end_point:
                 used_connections[f"{start_point} {end_point}"] = connection
                 return connection
+    def create_paths_objects(self):
+        paths_obj = []
+        for p in self.paths:
+            min_capacity = 9999999
+            for zone in p:
+                if self.graph.zones[zone].max_drones < min_capacity:
+                    min_capacity = self.graph.zones[zone].max_drones
+            paths_obj.append(Path(p, min_capacity))
+        return paths_obj
+
     def get_strategy(self):
-        if len(self.paths) > 1:
-            narrows = []
-            for p in self.paths:
-                is_narrow = False
-                for zone in p:
-                    if self.graph.zones[zone].max_drones == 1:
-                        narrows.append(True)
-                        is_narrow = True
-                        break
-                if not is_narrow:
-                    narrows.append(False)
-            if False not in narrows:
-                return self.path[0]
-            elif True not in narrows:
-                chosen = []
-                for p in self.paths:
-                    chosen.append(p)
-                    if len(chosen) == 3:
-                        break
-                return chosen
-            elif False in narrows:
-                pos = narrows.index(False)
-                if len(self.paths[pos]) == len(self.paths[0]) or  len(self.paths[pos]) <= len(self.paths[0]) + 2:
-                    return self.paths[pos]  
-                else:
-                    return self.paths[0]
-        else:
-            return self.paths[0]
+        paths_obj = self.create_paths_objects()
+        for drone in self.drones:
+            best_arrival = sys.maxsize
+            for path in paths_obj:
+                enter_turn = (path.sended // path.capacity) + 1
+                
+
     def drone_mover(self):
         self.graph.create_drones(self.drones_numebr)
         self.graph.start.current_drones = self.drones_numebr
@@ -109,6 +105,7 @@ class DroneMover():
 
 def compute_path():
     graph, nb_drones = graph_builder_test.build_graph()
+    graph.create_drones(nb_drones)
     searcher = A_stare_search.AStarSearch(graph, nb_drones)
     paths = searcher.get_paths()
     return graph, nb_drones, paths
