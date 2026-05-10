@@ -4,11 +4,12 @@ import time
 import sys
 
 
-class Path()
+class Path():
     def __init__(self, path, capacity):
         self.length = len(path)
         self.capacity = capacity
         self.sent_drones = 0
+        self.path = path
 
 class DroneMover():
     def __init__(self, graph, drones_number, path):
@@ -40,8 +41,19 @@ class DroneMover():
         paths_obj = self.create_paths_objects()
         for drone in self.drones:
             best_arrival = sys.maxsize
+            best_path = paths_obj[0]
             for path in paths_obj:
-                enter_turn = (path.sended // path.capacity) + 1
+                enter_turn = (path.sent_drones // path.capacity) + 1
+                arrival = enter_turn + path.length - 1
+                if arrival <= best_arrival:
+                    best_path = path
+                    best_arrival = arrival
+            drone.path = best_path.path
+            best_path.sent_drones += 1
+        for drone in self.drones:
+            print(drone.path)
+            print("\n\n")
+
                 
 
     def drone_mover(self):
@@ -113,8 +125,6 @@ def compute_path():
 
 if __name__ == "__main__":
     graph, nb_drones, paths = compute_path()
-    for p in paths:
-        print(p)
     mover = DroneMover(graph, nb_drones, paths)
     mover.get_strategy()
     # history = mover.drone_mover()
