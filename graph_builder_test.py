@@ -105,6 +105,75 @@ class Graph:
             self.drones.append(Drone(i, "WAITING", self.start.name, None))
     # def path_giver(self, path):
 
+
+# def build_graph():
+#     graph = Graph()
+
+#     # ===== Zones =====
+#     start         = Zone("start",         0, 0,  zone_type=ZoneType.NORMAL,     max_drones=4)
+#     slow_path1    = Zone("slow_path1",    1, -1, zone_type=ZoneType.RESTRICTED)
+#     slow_path2    = Zone("slow_path2",    2, -1, zone_type=ZoneType.RESTRICTED)
+#     slow_path3    = Zone("slow_path3",    3, -1, zone_type=ZoneType.RESTRICTED)
+#     fast_junction = Zone("fast_junction", 1, 0,  zone_type=ZoneType.PRIORITY,   max_drones=2)
+#     fast_path     = Zone("fast_path",     2, 0,  zone_type=ZoneType.PRIORITY)
+#     merge_point   = Zone("merge_point",   3, 0,  zone_type=ZoneType.NORMAL,     max_drones=3)
+#     goal          = Zone("goal",          4, 0,  zone_type=ZoneType.NORMAL,     max_drones=4)
+
+#     # ===== Add zones =====
+#     for z in [start, slow_path1, slow_path2, slow_path3, fast_junction, fast_path, merge_point, goal]:
+#         graph.add_zone(z)
+
+#     graph.start = start
+#     graph.end   = goal
+
+#     # ===== Connections =====
+#     graph.connect("start",         "slow_path1")
+#     graph.connect("start",         "fast_junction")
+#     graph.connect("slow_path1",    "slow_path2")
+#     graph.connect("slow_path2",    "slow_path3")
+#     graph.connect("slow_path3",    "merge_point")
+#     graph.connect("fast_junction", "fast_path")
+#     graph.connect("fast_path",     "merge_point")
+#     graph.connect("merge_point",   "goal")
+
+#     # ===== Heuristic =====
+#     graph.heuristic()
+
+#     return graph, 4
+
+# def build_graph():
+#     graph = Graph()
+
+#     # ===== Zones =====
+#     start       = Zone("start",       0, 0, zone_type=ZoneType.NORMAL,     max_drones=6)
+#     loop_a      = Zone("loop_a",      1, 0, zone_type=ZoneType.RESTRICTED)
+#     loop_b      = Zone("loop_b",      2, 0, zone_type=ZoneType.RESTRICTED)
+#     loop_c      = Zone("loop_c",      2, 1, zone_type=ZoneType.RESTRICTED)
+#     loop_d      = Zone("loop_d",      1, 1, zone_type=ZoneType.RESTRICTED)
+#     exit_point  = Zone("exit_point",  3, 0, zone_type=ZoneType.NORMAL)
+#     goal        = Zone("goal",        4, 0, zone_type=ZoneType.NORMAL,     max_drones=6)
+
+#     # ===== Add zones =====
+#     for z in [start, loop_a, loop_b, loop_c, loop_d, exit_point, goal]:
+#         graph.add_zone(z)
+
+#     graph.start = start
+#     graph.end   = goal
+
+#     # ===== Connections =====
+#     graph.connect("start",      "loop_a")
+#     graph.connect("loop_a",     "loop_b")
+#     graph.connect("loop_b",     "loop_c")
+#     graph.connect("loop_c",     "loop_d")
+#     graph.connect("loop_d",     "loop_a")   # closes the circular loop
+#     graph.connect("loop_b",     "exit_point")
+#     graph.connect("exit_point", "goal")
+
+#     # ===== Heuristic =====
+#     graph.heuristic()
+
+#     return graph, 6
+
 def build_graph():
     graph = Graph()
 

@@ -1,5 +1,6 @@
 import A_stare_search
 import graph_builder_test
+from graph_builder_test import ZoneType
 import time
 import sys
 
@@ -29,6 +30,14 @@ class DroneMover():
             if connection.zone_a.name == start_point and connection.zone_b.name == end_point:
                 used_connections[f"{start_point} {end_point}"] = connection
                 return connection
+    def calculate_path_cost(self, path):
+        path_cost = 0
+        for zone in path:
+            if self.graph.zones[zone].zone_type == ZoneType.RESTRICTED:
+                path_cost += 2
+            else:
+                path_cost += 1
+        return path
     def create_paths_objects(self):
         paths_obj = []
         for p in self.paths:
@@ -40,153 +49,123 @@ class DroneMover():
             paths_obj.append(Path(p, min_capacity))
         return paths_obj
 
+    # def get_strategy(self):
+    #     paths_obj = self.create_paths_objects()
+    #     for drone in self.drones:
+    #         best_arrival = sys.maxsize
+    #         best_path = paths_obj[0]
+    #         counter = 0
+    #         for path in paths_obj:
+    #             enter_turn = (path.sent_drones // path.capacity) + 1
+    #             arrival = enter_turn + path.length - 1
+    #             if arrival <= best_arrival:
+    #                 best_path = path
+    #                 best_arrival = arrival
+    #             counter += 1
+    #             if counter == 2:
+                    
+    #         drone.path = best_path.path
+    #         best_path.sent_drones += 1 
+
     def get_strategy(self):
         paths_obj = self.create_paths_objects()
         for drone in self.drones:
             best_arrival = sys.maxsize
             best_path = paths_obj[0]
+            counter = 0
             for path in paths_obj:
                 enter_turn = (path.sent_drones // path.capacity) + 1
                 arrival = enter_turn + path.length - 1
                 if arrival <= best_arrival:
                     best_path = path
                     best_arrival = arrival
+                counter += 1
+                if counter == 2:
+                    break
             drone.path = best_path.path
-            best_path.sent_drones += 1   
-                         
+            best_path.sent_drones += 1
+
+
+
     def drone_mover(self):
+        history_lines = []
         while self.graph.end.current_drones != self.drones_numebr:
 
-            # ===== Sort drones =====
-            # Front drones move first
-            priority_drones = sorted(
-                self.drones,
-                key=lambda drone: drone.my_position,
-                reverse=True
-            )
+            priority_drones = sorted(self.drones, key=lambda drone: drone.my_position, reverse=True)
 
-            # ===== Reservation system =====
+
             future_occupancy = {}
-
             for zone_name, zone in self.graph.zones.items():
                 future_occupancy[zone_name] = zone.current_drones
 
-            # ===== Planned movements =====
             planned_moves = []
 
-            # ===== Phase 1: Planning =====
             for drone in priority_drones:
 
                 if drone.my_state == "DELIVERED":
                     continue
 
-                # ===== End of path =====
+
                 if drone.my_position + 1 >= len(drone.path):
                     drone.my_state = "DELIVERED"
                     continue
 
-                current = self.graph.zones[
-                    drone.path[drone.my_position]
-                ]
-
-                to_move = self.graph.zones[
-                    drone.path[drone.my_position + 1]
-                ]
-
-                # ===== Reservation capacity check =====
+                current = self.graph.zones[drone.path[drone.my_position]]
+                to_move = self.graph.zones[drone.path[drone.my_position + 1]]
+                connection = self.bring_connections(current.name, to_move.name)
+                # print(connection)
+                # exit()
                 if future_occupancy[to_move.name] < to_move.max_drones:
+                    if to_move.zone_type == ZoneType.RESTRICTED:
+                        if drone.my_state == "IN_TRANSITE":
+                            planned_moves.append((drone, current, to_move))
+                            drone.my_state = "WAITING"  
+                            future_occupancy[current.name] -= 1   
+                            future_occupancy[to_move.name] += 1
+                            connection.current_drones -= 1        
+                        elif connection.current_drones < connection.max_capacity:
+                            planned_moves.append((drone, current, "IN_TRANSITE"))
+                            drone.my_state = "IN_TRANSITE"
+                            future_occupancy[current.name] -= 1
+                            connection.current_drones += 1        
+                    else:
+                        future_occupancy[to_move.name] += 1
+                        planned_moves.append((drone, current, to_move))
 
-                    planned_moves.append(
-                        (drone, current, to_move)
-                    )
-
-                    # Reserve slot immediately
-                    future_occupancy[to_move.name] += 1
-                    future_occupancy[current.name] -= 1
-
-                    drone.my_state = "READY_TO_MOVE"
+                        future_occupancy[current.name] -= 1
+                        drone.my_state = "READY_TO_MOVE"
 
                 else:
                     drone.my_state = "WAITING"
 
-            # ===== Phase 2: Apply movements =====
+
             for drone, current, to_move in planned_moves:
 
+                if to_move != "IN_TRANSITE":
+                    to_move.current_drones += 1
+                    drone.my_position += 1
+                    drone.my_state = "WAITING"
+
                 current.current_drones -= 1
-                to_move.current_drones += 1
 
-                drone.my_position += 1
-                drone.my_state = "IN_TRANSITE"
+                print(f"D{drone.id}-{getattr(to_move, 'name', to_move)} ", end="")
 
-                print(f"D{drone.id}-{to_move.name} ",end="")
+                if hasattr(to_move, 'name'):
+                    if to_move.name == self.graph.end.name:
+                        drone.my_state = "DELIVERED"
 
-                # ===== Goal reached =====
-                if to_move.name == self.graph.end.name:
-                    drone.my_state = "DELIVERED"
-                    # print(f"D{drone.id} DELIVERED")
-
-            # ===== Tick separator =====
-            # print("\n--- NEXT TICK ---\n")
+            if planned_moves:
+                history_lines.append(" ".join(
+                    f"D{drone.id}-{getattr(to_move, 'name', to_move)}" for drone, _, to_move in planned_moves
+                ))
             print("\n")
+
+            if not planned_moves:
+                raise RuntimeError("No drone could move this turn; check the path strategy or zone capacities")
+
+        return "\n".join(history_lines)
                         
                             
-
-    # def drone_mover(self):
-    #     self.graph.create_drones(self.drones_numebr)
-    #     self.graph.start.current_drones = self.drones_numebr
-    #     self.graph.start.drones_in_station = self.graph.drones
-    #     while self.graph.end.current_drones != self.drones_numebr:
-    #         # i used -1 beacause i want to compare the current point with the next one
-    #         #  so if i reach the end of the path i will compare the current point with the next one which is the end point
-    #         turn = {}
-    #         for i in range(len(self.path) - 1):
-    #             current = self.graph.zones[self.path[i]]
-    #             start_station = self.graph.zones[self.path[i + 1]]
-    #             connection = self.bring_connections(start_station.name, current.name)
-    #             # this line is to check if the drone can move to the next station or not if the current 
-    #             # station has less drones than the max drones or if the current station is the end station
-    #             if current.current_drones < current.max_drones or current.name == self.graph.end.name:
-    #                 if current.zone_type == graph_builder_test.ZoneType.RESTRICTED:
-    #                     if connection.current_usage > 0:
-    #                         # change state for end point
-    #                         drone = connection.current_drones.pop(0)
-    #                         drone.my_state = "WAITING"
-    #                         current.drones_in_station.append(drone)
-    #                         current.current_drones += 1
-    #                         # change state for the connection
-    #                         connection.current_usage -= 1
-    #                         # add the move to history
-    #                         # turn[f"D{drone.id}"] = {"connection": current.name}
-    #                         turn[f"D{drone.id}"] = f"[transit]->{current.name}"
-    #                     if start_station.current_drones > 0:
-    #                         drone = start_station.drones_in_station.pop(0)
-    #                         drone.my_state = "IN_TRANSITE"
-    #                         connection.current_drones.append(drone)
-    #                         connection.current_usage += 1
-    #                         start_station.current_drones -= 1
-    #                         # turn[f"D{drone.id}"] = {start_station.name: "connection"}
-    #                         turn[f"D{drone.id}"] = f"{start_station.name}->[transit]->{current.name}"
-    #                 else:
-    #                     if start_station.current_drones > 0:
-    #                         # print("cc")
-    #                         # exit()
-    #                         for _ in range(connection.max_capacity):
-    #                             drone = start_station.drones_in_station.pop(0)
-    #                             drone.my_state = "WAITING"
-    #                             current.drones_in_station.append(drone)
-    #                             current.current_drones += 1
-    #                             start_station.current_drones -= 1
-    #                             # turn[f"D{drone.id}"] = {start_station.name: current.name}
-    #                             turn[f"D{drone.id}"] = f"{start_station.name}->{current.name}"
-    #                             # self.drones_history[f"D{drone}"] = str(connection)
-    #                             if current.max_drones > current.current_drones:
-    #                                 break
-    #         self.turns += 1
-    #         self.drones_history[f"Turn {self.turns}"] = turn
-
-    #     return self.drones_history
-
-
 def compute_path():
     graph, nb_drones = graph_builder_test.build_graph()
     graph.create_drones(nb_drones)

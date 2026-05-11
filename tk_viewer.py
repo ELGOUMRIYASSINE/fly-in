@@ -3,11 +3,16 @@ from __future__ import annotations
 import math
 import re
 from collections import defaultdict
-import tkinter as tk
+
+try:
+    import tkinter as tk
+except ModuleNotFoundError:
+    tk = None
 
 import A_stare_search
 import graph_builder_test
 from drone_mover import DroneMover
+import simulation
 
 
 # ── visual constants ──────────────────────────────────────────────────────────
@@ -31,10 +36,11 @@ LINE_COLOR    = "#4E4E72"
 TEXT_COLOR    = "#FFFFFF"
 PANEL_COLOR   = "#24243A"
 TRANSIT_COLOR = "#F1C40F"
+TRANSIT_TOKENS = {"[transit]", "IN_TRANSITE", "IN_TRNSITE"}
 
-CANVAS_W = 1500   # fixed logical canvas width
-MARGIN_X = 80
-MARGIN_Y = 70
+CANVAS_W = 1800   # fixed logical canvas width
+MARGIN_X = 120
+MARGIN_Y = 100
 
 
 # ── text-format parser ────────────────────────────────────────────────────────
@@ -51,6 +57,8 @@ def parse_text_history(raw: str) -> tuple[list[dict[int, str]], int]:
         for m in TOKEN.finditer(line):
             did  = int(m.group(1))
             zone = m.group(2)
+            if zone in TRANSIT_TOKENS:
+                zone = "IN_TRANSITE"
             snapshot[did] = zone
             nb_drones = max(nb_drones, did + 1)
         if snapshot:
@@ -105,10 +113,10 @@ def _build_zone_positions(
     n_cols = max(1, len(unique_x))
     n_rows = max(1, len(unique_y))
 
-    col_step = max(70, (CANVAS_W - 2 * MARGIN_X) // n_cols)
-    row_step = 80   # fixed row height — comfortable for labels
+    col_step = max(150, (CANVAS_W - 2 * MARGIN_X) // max(1, n_cols - 1))
+    row_step = 140   # wide row height keeps dense layers readable
 
-    canvas_h = MARGIN_Y * 2 + (n_rows - 1) * row_step + 60
+    canvas_h = MARGIN_Y * 2 + (n_rows - 1) * row_step + 140
 
     # ── group zones that land on the same grid cell ───────────────────────────
     grid_groups: dict[tuple[int, int], list[str]] = defaultdict(list)
@@ -129,14 +137,14 @@ def _build_zone_positions(
             zone_radii[ordered[0]]     = 22
         else:
             # spread clashing zones in a small circle
-            spread = 14 + min(16, len(ordered) * 3)
+            spread = 24 + min(18, len(ordered) * 4)
             for idx, name in enumerate(ordered):
                 angle = (2 * math.pi * idx) / len(ordered)
                 zone_positions[name] = (
                     int(px_x + math.cos(angle) * spread),
                     int(px_y + math.sin(angle) * spread * 0.7),
                 )
-                zone_radii[name] = 18
+                zone_radii[name] = 20
 
     # ── zones that appear only in snapshots (not in graph) ───────────────────
     missing = all_zone_names - set(zone_positions.keys())
@@ -146,7 +154,7 @@ def _build_zone_positions(
             zone_positions[name] = (fallback_x, MARGIN_Y + idx * 40)
             zone_radii[name]     = 16
 
-    canvas_w = MARGIN_X * 2 + (n_cols - 1) * col_step + 80
+    canvas_w = max(CANVAS_W, MARGIN_X * 2 + (n_cols - 1) * col_step + 160)
     return zone_positions, zone_radii, canvas_w, canvas_h
 
 
@@ -159,6 +167,9 @@ class DroneSimulator:
         raw_text: str,
         nb_drones: int | None = None,
     ) -> None:
+        if tk is None:
+            raise RuntimeError("tkinter is not available in this environment")
+
         self.graph = graph
         self.turns, detected = parse_text_history(raw_text)
         self.nb_drones = nb_drones if nb_drones is not None else detected
@@ -168,7 +179,7 @@ class DroneSimulator:
         # collect every zone name that appears in snapshots
         snap_zones: set[str] = set()
         for snap in self.turns:
-            snap_zones.update(v for v in snap.values() if v != "[transit]")
+            snap_zones.update(v for v in snap.values() if v not in TRANSIT_TOKENS)
 
         self.zone_positions, self.zone_radii, self.canvas_w, self.canvas_h = \
             _build_zone_positions(graph, snap_zones)
@@ -245,17 +256,10 @@ class DroneSimulator:
     def _reset_state(self) -> None:
         self.current_turn_idx = 0
         start_name = self.graph.start.name
-        if self.turns:
-            snap = self.turns[0]
-            self.drone_states = {
-                did: ("zone", snap.get(did, start_name))
-                for did in range(self.nb_drones)
-            }
-        else:
-            self.drone_states = {
-                did: ("zone", start_name)
-                for did in range(self.nb_drones)
-            }
+        self.drone_states = {
+            did: ("zone", start_name)
+            for did in range(self.nb_drones)
+        }
         self._draw_all()
         self._update_panel()
 
@@ -267,10 +271,16 @@ class DroneSimulator:
             token = snap.get(did)
             if token is None:
                 continue
-            if token == "[transit]":
+            if token in TRANSIT_TOKENS or token == "IN_TRANSITE":
                 prev = self.drone_states.get(did, ("zone", self.graph.start.name))
                 from_zone = prev[1] if len(prev) > 1 else self.graph.start.name
-                self.drone_states[did] = ("transit", from_zone, from_zone)
+                destination = from_zone
+                next_turn_idx = self.current_turn_idx + 1
+                if next_turn_idx < len(self.turns):
+                    next_token = self.turns[next_turn_idx].get(did)
+                    if next_token and next_token not in TRANSIT_TOKENS:
+                        destination = next_token
+                self.drone_states[did] = ("transit", from_zone, destination)
             else:
                 self.drone_states[did] = ("zone", token)
         self.current_turn_idx += 1
@@ -286,9 +296,42 @@ class DroneSimulator:
     def _draw_all(self) -> None:
         self.canvas.delete("all")
         self._draw_connections()
+        self._draw_transit_links()
         self._draw_zones()
         self._draw_drones()
         self._draw_legend()
+
+    def _draw_transit_links(self) -> None:
+        for did in range(self.nb_drones):
+            state = self.drone_states.get(did)
+            if not state or state[0] != "transit" or len(state) < 3:
+                continue
+            source, destination = state[1], state[2]
+            if source not in self.zone_positions or destination not in self.zone_positions:
+                continue
+            x1, y1 = self.zone_positions[source]
+            x2, y2 = self.zone_positions[destination]
+            color = DRONE_COLORS[did % len(DRONE_COLORS)]
+            self.canvas.create_line(
+                x1, y1, x2, y2,
+                fill=TRANSIT_COLOR,
+                width=4,
+                dash=(10, 6),
+                smooth=True,
+            )
+            mx, my = (x1 + x2) // 2, (y1 + y2) // 2
+            self.canvas.create_oval(
+                mx - 11, my - 11, mx + 11, my + 11,
+                fill=color,
+                outline=TRANSIT_COLOR,
+                width=3,
+            )
+            self.canvas.create_text(
+                mx, my,
+                text=str(did),
+                fill="#111111",
+                font=("Arial", 7, "bold"),
+            )
 
     def _draw_connections(self) -> None:
         drawn: set[frozenset] = set()
@@ -343,7 +386,7 @@ class DroneSimulator:
             label = name.replace("_", "\n")
             self.canvas.create_text(
                 sx, sy, text=label,
-                fill=TEXT_COLOR, font=("Arial", 6, "bold"),
+                fill=TEXT_COLOR, font=("Arial", 7, "bold"),
                 justify=tk.CENTER,
             )
             # capacity badge
@@ -354,7 +397,7 @@ class DroneSimulator:
                     self.canvas.create_oval(bx-8, by-8, bx+8, by+8,
                                             fill="#1B1B28", outline="#FFD700", width=2)
                     self.canvas.create_text(bx, by, text=str(max_d),
-                                            fill="#FFD700", font=("Arial", 6, "bold"))
+                                            fill="#FFD700", font=("Arial", 7, "bold"))
 
     def _draw_legend(self) -> None:
         lx, ly = 12, 12
@@ -386,7 +429,7 @@ class DroneSimulator:
             mx, my  = (x1+x2)//2, (y1+y2)//2
             dx, dy  = x2-x1, y2-y1
             length  = max(1.0, math.hypot(dx, dy))
-            offset  = 8 + (did % 3) * 3
+            offset  = 10 + (did % 4) * 2
             return (int(mx - dy/length * offset),
                     int(my + dx/length * offset))
 
@@ -445,7 +488,19 @@ class DroneSimulator:
 # ── entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
+    if tk is None:
+        print("tkinter is not available; starting the browser viewer instead.")
+        try:
+            simulation.main()
+        except OSError as exc:
+            if getattr(exc, "errno", None) == 98:
+                print("Browser viewer is already running on port 8765.")
+                return
+            raise
+        return
+
     graph, nb_drones = graph_builder_test.build_graph()
+    graph.create_drones(nb_drones)
 
     searcher  = A_stare_search.AStarSearch(graph, nb_drones)
     all_paths = searcher.get_paths()
@@ -454,11 +509,10 @@ def main() -> None:
         print("No path found — check graph / start / end.")
         return
 
-    path = all_paths[0]
     print(f"Paths found : {len(all_paths)}")
-    print(f"Using path  : {path}")
 
-    mover    = DroneMover(graph, nb_drones, path)
+    mover    = DroneMover(graph, nb_drones, all_paths)
+    mover.get_strategy()
     raw_text: str = mover.drone_mover()
 
     print(f"Total turns : {mover.turns}")
