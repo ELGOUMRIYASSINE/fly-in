@@ -69,8 +69,8 @@ class Connection:
         self.zone_a: Zone = zone_a
         self.zone_b: Zone = zone_b
         self.max_capacity: int = max_capacity
-        self.current_usage: int = 0
-        self.current_drones = []
+        self.current_drones: int = 0
+        self.drones_in_station = []
 
     def __repr__(self) -> str:
         return f"{self.zone_a.name} <-> {self.zone_b.name}"

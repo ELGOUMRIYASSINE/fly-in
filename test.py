@@ -1,1 +1,3 @@
-print(4 // 1)
+import tkinter
+
+tkinter._test()
