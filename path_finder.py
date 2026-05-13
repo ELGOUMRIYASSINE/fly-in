@@ -1,12 +1,7 @@
 from enum  import Enum
-import graph_builder_test
 from graph_builder_test import Graph
-import math
 import heapq
-import random
 
-
-graph, nb_drones = graph_builder_test.build_graph()
 class AStarSearch:
     def __init__(self, graph: Graph, drones_number: int):
         self.graph = graph
@@ -16,7 +11,7 @@ class AStarSearch:
         self.visited = set()
         self.came_from = {}
         self.begin = True
-        self.path = []
+        self.paths = []
         self.drones_number = drones_number
         self.g_scores = {}
         self.paths_counter = 0
@@ -55,8 +50,8 @@ class AStarSearch:
         if self.paths_counter == 0:
             first = True
         if self.graph.end:
-            self.g_scores[self.start.name] = 0
-            self.push_heap(0, 0, graph.start.name)
+            self.g_scores[self.graph.start.name] = 0
+            self.push_heap(0, 0, self.graph.start.name)
             while True:
                 current_zone = self.pop_heap()
                 if current_zone[2] in self.visited:
@@ -85,7 +80,6 @@ class AStarSearch:
                     if first and counter == 1:
                         self.increaesers.pop()
             
-        
     def get_paths(self):
         tmp_costs = self.fake_costs()
         self.find(tmp_costs)
@@ -98,13 +92,8 @@ class AStarSearch:
             self.increase_zone(tmp_costs, founded_path)
             self.find(tmp_costs)
             founded_path = self.extract_path(self.paths_counter)
-            if founded_path in self.path:
+            if founded_path in self.paths:
                 break
-            if founded_path not in self.path:
-                self.path.append(founded_path)
-        return self.path
-
-
-# graph, drones_nbr = graph_builder_test.build_graph()
-# test = AStarSearch(graph, drones_nbr)
-# test.get_paths()
+            if founded_path not in self.paths:
+                self.paths.append(founded_path)
+        return self.paths
