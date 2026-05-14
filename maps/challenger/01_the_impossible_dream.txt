@@ -181,7 +181,7 @@ connection: final_torture1-final_torture2
 connection: final_torture2-final_torture3
 connection: final_torture3-final_torture4
 connection: final_torture4-final_torture5
-connection: final_torture5-impossible_goal
+connection: final_torture5-conv_restricted7
 
 # Emergency bypass routes (extremely expensive)
 connection: overflow_hell1-conv_restricted1

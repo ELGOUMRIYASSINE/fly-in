@@ -141,18 +141,3 @@ class DroneMover():
                 raise RuntimeError("No drone could move this turn; check the path strategy or zone capacities")
 
         return self.drones_history
-                                       
-    # def compute_path():
-    #     graph, nb_drones = graph_builder_test.build_graph()
-    #     graph.create_drones(nb_drones)
-    #     searcher = path_finder.AStarSearch(graph, nb_drones)
-    #     paths = searcher.get_paths()
-    #     return graph, nb_drones, paths
-
-
-# if __name__ == "__main__":
-#     graph, nb_drones, paths = compute_path()
-#     mover = DroneMover(graph, nb_drones, paths)
-#     history = mover.drone_mover()
-#     displayer = display.Drawer(graph, history)
-#     displayer.draw_map()
