@@ -129,7 +129,7 @@ def parser(input_file):
     seen_connections = set()
     known_hub_names = set() 
 
-    with open(input_file, "r") as file:
+    with open(f"maps/{input_file}", "r") as file:
         for line in file:
             line_number += 1
             line = line.strip()
@@ -277,8 +277,8 @@ def print_config(config_space):
     for conn in config_space["connections"]:
         print(conn)
 
-try:
-    result = parser("maps/easy/01_linear_path.txt")
-    print_config(result)
-except ParsingError as e:
-    print(f"Parsing Error: {e}")
+# try:
+#     result = parser("easy/01_linear_path.txt")
+#     print_config(result)
+# except ParsingError as e:
+#     print(f"Parsing Error: {e}")
