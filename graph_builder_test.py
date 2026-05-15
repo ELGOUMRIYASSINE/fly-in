@@ -75,7 +75,7 @@ class Graph:
         self.start: Zone | None = None
         self.end: Zone | None = None
         self.drones = []
-        self.zones_total_cost = {}
+        self.nb_drones = 0
 
     def add_zone(self, zone: Zone) -> None:
         self.zones[zone.name] = zone
@@ -92,25 +92,16 @@ class Graph:
         for i in range(drones_number):
             self.drones.append(Drone(i, "WAITING", self.start.name, None))
 
-def build_graph():
-    graph = Graph()
-    map = input("enter the map name: ")
-    parsed_data = parser.parser(map)
+    def build_graph(self):
+        map = input("enter the map name: ")
+        parsed_data = parser.parser(map)
 
+        for hub in parsed_data["hubs"]:
+            self.add_zone(Zone(hub["name"], hub["coordinates"][0], hub["coordinates"][1], hub['zone']['color'], hub['zone']['type'], hub['zone']['max_drones']))
+        for connection in parsed_data["connections"]:
+            self.connect(connection["from"], connection["to"], connection['max_link_capacity'])
 
-
-    for hub in parsed_data["hubs"]:
-        graph.add_zone(Zone(hub["name"], hub["coordinates"][0], hub["coordinates"][1], hub['zone']['color'], hub['zone']['type'], hub['zone']['max_drones']))
-    for connection in parsed_data["connections"]:
-        graph.connect(connection["from"], connection["to"], connection['max_link_capacity'])
-    graph.start = graph.zones.get(parsed_data["start_hub"])
-    graph.end   = graph.zones.get(parsed_data["end_hub"])
-
-    return graph, 25
-
-if __name__ == "__main__":
-    graph, drones_number = build_graph()
-
-    # graph.create_drones(drones_number)
-    # print(graph.zones)
-    # print(graph.connections)
+        self.start = self.zones.get(parsed_data["start_hub"])
+        self.end   = self.zones.get(parsed_data["end_hub"])
+        self.nb_drones = int(parsed_data["nb_drones"])
+        self.create_drones(self.nb_drones)

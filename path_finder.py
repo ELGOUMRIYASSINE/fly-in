@@ -3,7 +3,7 @@ from graph_builder_test import Graph
 import heapq
 
 class AStarSearch:
-    def __init__(self, graph: Graph, drones_number: int):
+    def __init__(self, graph: Graph):
         self.graph = graph
         self.start = graph.start
         self.end = graph.end
@@ -12,7 +12,7 @@ class AStarSearch:
         self.came_from = {}
         self.begin = True
         self.paths = []
-        self.drones_number = drones_number
+        self.drones_number = graph.nb_drones
         self.g_scores = {}
         self.paths_counter = 0
         self.increaesers = []

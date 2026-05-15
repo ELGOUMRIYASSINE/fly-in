@@ -1,1 +1,0 @@
-print(bool(("end_hub: goal 10 10 [color=yellow]".split("]", 1))[1].strip()))

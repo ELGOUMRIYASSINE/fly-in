@@ -16,10 +16,10 @@ class Path():
         self.drone_state = "WAITING"
 
 class DroneMover():
-    def __init__(self, graph, drones_number, paths):
+    def __init__(self, graph, paths):
         self.drones_history = {}
         self.graph = graph
-        self.drones_numebr = drones_number
+        self.drones_numebr = graph.nb_drones
         self.drones = graph.drones
         self.paths = paths
         self.turns = 0
@@ -115,7 +115,7 @@ class DroneMover():
                         planned_moves.append((drone, current, to_move))
 
                         future_occupancy[current.name] -= 1
-                        drone.my_state = "READY_TO_MOVE"
+                        drone.my_state = "WAITING"
 
                 else:
                     drone.my_state = "WAITING"
@@ -136,8 +136,10 @@ class DroneMover():
                 history_lines.append(" ".join(
                     f"D{drone.id}-{getattr(to_move, 'name', to_move)}" for drone, _, to_move in planned_moves
                 ))
-            print(planned_moves)
             if not planned_moves:
                 raise RuntimeError("No drone could move this turn; check the path strategy or zone capacities")
-
+        for line in self.drones_history:
+            for item in line:
+                print(f"{item[0].id} {item[1:]}")
+        exit()
         return self.drones_history
