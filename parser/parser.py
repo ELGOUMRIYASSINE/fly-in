@@ -262,25 +262,4 @@ def parser(input_file):
     if "end_hub" not in config_space:
         print("Parsing Error: Missing required 'end_hub' definition.")
         exit(1)
-    # for hub in config_space["hubs"]:
-    #     print(hub)
-    # exit()
     return config_space
-
-
-# def print_config(config_space):
-#     print(f"nb_drones : {config_space['nb_drones']}")
-#     print(f"start_hub : {config_space['start_hub']}")
-#     print(f"end_hub   : {config_space['end_hub']}")
-#     print()
-#     for hub in config_space["hubs"]:
-#         print(hub)
-#     print()
-#     for conn in config_space["connections"]:
-#         print(conn)
-
-# try:
-#     result = parser("easy/01_linear_path.txt")
-#     print_config(result)
-# except ParsingError as e:
-#     print(f"Parsing Error: {e}")

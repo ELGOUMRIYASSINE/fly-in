@@ -100,7 +100,6 @@ class Graph:
             self.add_zone(Zone(hub["name"], hub["coordinates"][0], hub["coordinates"][1], hub['zone']['color'], hub['zone']['type'], hub['zone']['max_drones']))
         for connection in parsed_data["connections"]:
             self.connect(connection["from"], connection["to"], connection['max_link_capacity'])
-
         self.start = self.zones.get(parsed_data["start_hub"])
         self.end   = self.zones.get(parsed_data["end_hub"])
         self.nb_drones = int(parsed_data["nb_drones"])

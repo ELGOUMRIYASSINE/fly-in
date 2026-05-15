@@ -63,7 +63,7 @@ class AStarSearch:
                     current = self.graph.zones[current_zone[2]]
                     counter = 0
                     for zone in current.neighbors:
-                        if zone.name not in self.visited and zone.zone_state_cost != "blocked":
+                        if zone.name not in self.visited and zone.zone_type != "blocked":
                             if first:
                                 if zone.name not in self.increaesers:
                                     self.increaesers.append(zone.name)
@@ -81,19 +81,36 @@ class AStarSearch:
                         self.increaesers.pop()
             
     def get_paths(self):
-        tmp_costs = self.fake_costs()
-        self.find(tmp_costs)
-        founded_path = self.extract_path(self.paths_counter)
-        for i in range(len(self.increaesers) + 1):
-            self.paths_counter += 1
-            self.zone_heap = []
-            self.g_scores = {}
-            self.visited = set()
-            self.increase_zone(tmp_costs, founded_path)
-            self.find(tmp_costs)
-            founded_path = self.extract_path(self.paths_counter)
-            if founded_path in self.paths:
+        if not self.start or not self.end:
+            return []
+
+        max_paths = min(4, self.drones_number)
+        cost_margin = 1
+        heap = [(0, 1, self.start.name, (self.start.name,))]
+        best_cost = None
+        founded_paths = []
+
+        while heap and len(founded_paths) < max_paths:
+            cost, path_length, zone_name, path = heapq.heappop(heap)
+
+            if best_cost is not None and cost > best_cost + cost_margin:
                 break
-            if founded_path not in self.paths:
-                self.paths.append(founded_path)
-        return self.paths
+
+            if zone_name == self.end.name:
+                if best_cost is None:
+                    best_cost = cost
+                founded_paths.append(list(reversed(path)))
+                continue
+
+            current = self.graph.zones[zone_name]
+            for neighbor in current.neighbors:
+                if neighbor.name in path or neighbor.zone_type == "blocked":
+                    continue
+                new_cost = cost + neighbor.zone_cost
+                new_path = path + (neighbor.name,)
+                heapq.heappush(
+                    heap,
+                    (new_cost, path_length + 1, neighbor.name, new_path)
+                )
+
+        return founded_paths

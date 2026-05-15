@@ -39,7 +39,7 @@ class DroneMover():
                 path_cost += 2
             else:
                 path_cost += 1
-        return path
+        return path_cost
     def create_paths_objects(self):
         paths_obj = []
         for p in self.paths:
@@ -50,33 +50,26 @@ class DroneMover():
             p.reverse()
             paths_obj.append(Path(p, min_capacity))
         return paths_obj
-
     def get_strategy(self):
         paths_obj = self.create_paths_objects()
         for drone in self.drones:
             best_arrival = sys.maxsize
-            best_path = paths_obj[0]
-            counter = 0
+            best_path = None
             for path in paths_obj:
                 enter_turn = (path.sent_drones // path.capacity) + 1
-                arrival = enter_turn + path.length - 1
+                arrival = enter_turn + self.calculate_path_cost(path.path)
                 if arrival <= best_arrival:
                     best_path = path
                     best_arrival = arrival
-                counter += 1
-                if counter == 2:
-                    break
             drone.path = best_path.path
             best_path.sent_drones += 1
         
-
 
     def drone_mover(self):
         self.get_strategy()
         history_lines = []
         while self.graph.end.current_drones != self.drones_numebr:
             priority_drones = sorted(self.drones, key=lambda drone: drone.my_position, reverse=True)
-
 
             future_occupancy = {}
             for zone_name, zone in self.graph.zones.items():
@@ -98,7 +91,7 @@ class DroneMover():
                 to_move = self.graph.zones[drone.path[drone.my_position + 1]]
                 connection = self.bring_connections(current.name, to_move.name)
                 if future_occupancy[to_move.name] < to_move.max_drones:
-                    if to_move.zone_type == ZoneType.RESTRICTED:
+                    if to_move.zone_type == "restricted":
                         if drone.my_state == "IN_TRANSITE":
                             planned_moves.append((drone, current, to_move))
                             drone.my_state = "WAITING"  
@@ -136,10 +129,13 @@ class DroneMover():
                 history_lines.append(" ".join(
                     f"D{drone.id}-{getattr(to_move, 'name', to_move)}" for drone, _, to_move in planned_moves
                 ))
+            # for move in planned_moves:
+            #     print((move[0].id, move[1], move[2]))
             if not planned_moves:
                 raise RuntimeError("No drone could move this turn; check the path strategy or zone capacities")
-        for line in self.drones_history:
-            for item in line:
-                print(f"{item[0].id} {item[1:]}")
-        exit()
+        # for line in self.drones_history:
+        #     for item in line:
+        #         print(f"{item[0].id} {item}")
+        # exit()
+        # exit()
         return self.drones_history
