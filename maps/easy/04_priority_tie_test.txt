@@ -1,0 +1,16 @@
+# Two equal-cost paths.
+# Expected chosen path first:
+# start -> priority_path -> goal
+
+nb_drones: 1
+
+start_hub: start 0 0 [color=green max_drones=1]
+hub: priority_path 1 1 [zone=priority color=cyan max_drones=1]
+hub: normal_path 1 -1 [zone=normal color=blue max_drones=1]
+end_hub: goal 2 0 [color=red max_drones=1]
+
+connection: start-priority_path
+connection: priority_path-goal
+
+connection: start-normal_path
+connection: normal_path-goal

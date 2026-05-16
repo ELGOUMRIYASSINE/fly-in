@@ -129,7 +129,7 @@ def parser(input_file):
     seen_connections = set()
     known_hub_names = set() 
 
-    with open(f"maps/{input_file}", "r") as file:
+    with open(f"{input_file}", "r") as file:
         for line in file:
             line_number += 1
             line = line.strip()
@@ -262,4 +262,6 @@ def parser(input_file):
     if "end_hub" not in config_space:
         print("Parsing Error: Missing required 'end_hub' definition.")
         exit(1)
+    for hub in config_space["hubs"]:
+        print(hub)
     return config_space

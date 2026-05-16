@@ -1,9 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from typing import Dict, List
-import math
 from parser import parser
-
 
 class ZoneType(Enum):
     NORMAL = "normal"
@@ -22,8 +20,7 @@ class Drone():
         self.my_state = "WAITING"
 
 class Zone:
-    zone_state_cost = {"NORMAL":1, "BLOCKED":9999999, "RESTRICTED":2, "PRIORITY":0.9}
-    zone_move_state = ["WAITING", "IN_TRANSITE", "DELIVERED"]
+    zone_state_cost = {"NORMAL":1, "BLOCKED":9999999, "RESTRICTED":2, "PRIORITY":1}
     def __init__(
         self,
         name: str,
@@ -32,14 +29,12 @@ class Zone:
         color: str | None = None,
         zone_type: ZoneType = ZoneType.NORMAL,
         max_drones: int = None,
-        total_cost: int = None
     ):
         self.name: str = name
         self.x: int = x
         self.y: int = y
         self.zone_type: ZoneType = zone_type
         self.zone_cost = self.zone_state_cost[self.zone_type.upper()]
-        # self.total_cost = total_cost
         self.color: str | None = color
         self.max_drones: int = max_drones
         self.current_drones: int = 0
@@ -92,8 +87,7 @@ class Graph:
         for i in range(drones_number):
             self.drones.append(Drone(i, "WAITING", self.start.name, None))
 
-    def build_graph(self):
-        map = input("enter the map name: ")
+    def build_graph(self, map):
         parsed_data = parser.parser(map)
 
         for hub in parsed_data["hubs"]:
@@ -103,4 +97,6 @@ class Graph:
         self.start = self.zones.get(parsed_data["start_hub"])
         self.end   = self.zones.get(parsed_data["end_hub"])
         self.nb_drones = int(parsed_data["nb_drones"])
+        self.start.max_drones = max(self.start.max_drones, self.nb_drones)
+        self.end.max_drones = max(self.end.max_drones, self.nb_drones)
         self.create_drones(self.nb_drones)

@@ -1,9 +1,5 @@
-import path_finder
-import graph_builder_test
 from graph_builder_test import ZoneType
-import time
 import sys
-import display
 
 
 class Path():
@@ -24,18 +20,25 @@ class DroneMover():
         self.paths = paths
         self.turns = 0
         self.drones_history = []
+        self.used_connections = {}
+
+    def is_restricted(self, zone):
+        return zone.zone_type == "restricted" or zone.zone_type == ZoneType.RESTRICTED
+
     def bring_connections(self, start_point, end_point):
-        used_connections = {}
-        if f"{start_point} {end_point}" in used_connections:
-            return used_connections[f"{start_point} {end_point}"]
+        connection_key = tuple(sorted((start_point, end_point)))
+        if connection_key in self.used_connections:
+            return self.used_connections[connection_key]
         for connection in self.graph.connections:
-            if connection.zone_a.name == start_point and connection.zone_b.name == end_point:
-                used_connections[f"{start_point} {end_point}"] = connection
+            if {connection.zone_a.name, connection.zone_b.name} == {start_point, end_point}:
+                self.used_connections[connection_key] = connection
                 return connection
+        raise RuntimeError(f"No connection found between {start_point} and {end_point}")
+
     def calculate_path_cost(self, path):
         path_cost = 0
         for zone in path:
-            if self.graph.zones[zone].zone_type == ZoneType.RESTRICTED:
+            if self.is_restricted(self.graph.zones[zone]):
                 path_cost += 2
             else:
                 path_cost += 1
@@ -47,8 +50,7 @@ class DroneMover():
             for zone in p:
                 if self.graph.zones[zone].max_drones < min_capacity:
                     min_capacity = self.graph.zones[zone].max_drones
-            p.reverse()
-            paths_obj.append(Path(p, min_capacity))
+            paths_obj.append(Path(list(reversed(p)), min_capacity))
         return paths_obj
     def get_strategy(self):
         paths_obj = self.create_paths_objects()
@@ -68,6 +70,8 @@ class DroneMover():
     def drone_mover(self):
         self.get_strategy()
         history_lines = []
+        if self.graph.start.current_drones == 0:
+            self.graph.start.current_drones = self.drones_numebr
         while self.graph.end.current_drones != self.drones_numebr:
             priority_drones = sorted(self.drones, key=lambda drone: drone.my_position, reverse=True)
 
@@ -91,11 +95,10 @@ class DroneMover():
                 to_move = self.graph.zones[drone.path[drone.my_position + 1]]
                 connection = self.bring_connections(current.name, to_move.name)
                 if future_occupancy[to_move.name] < to_move.max_drones:
-                    if to_move.zone_type == "restricted":
+                    if self.is_restricted(to_move):
                         if drone.my_state == "IN_TRANSITE":
-                            planned_moves.append((drone, current, to_move))
+                            planned_moves.append((drone, "IN_TRANSITE", to_move))
                             drone.my_state = "WAITING"  
-                            future_occupancy[current.name] -= 1   
                             future_occupancy[to_move.name] += 1
                             connection.current_drones -= 1        
                         elif connection.current_drones < connection.max_capacity:
@@ -111,7 +114,8 @@ class DroneMover():
                         drone.my_state = "WAITING"
 
                 else:
-                    drone.my_state = "WAITING"
+                    if drone.my_state != "IN_TRANSITE":
+                        drone.my_state = "WAITING"
             self.drones_history.append(planned_moves)
             for drone, current, to_move in planned_moves:
 
@@ -120,7 +124,8 @@ class DroneMover():
                     drone.my_position += 1
                     drone.my_state = "WAITING"
 
-                current.current_drones -= 1
+                if hasattr(current, 'current_drones'):
+                    current.current_drones -= 1
 
                 if hasattr(to_move, 'name'):
                     if to_move.name == self.graph.end.name:
@@ -129,13 +134,7 @@ class DroneMover():
                 history_lines.append(" ".join(
                     f"D{drone.id}-{getattr(to_move, 'name', to_move)}" for drone, _, to_move in planned_moves
                 ))
-            # for move in planned_moves:
-            #     print((move[0].id, move[1], move[2]))
+
             if not planned_moves:
                 raise RuntimeError("No drone could move this turn; check the path strategy or zone capacities")
-        # for line in self.drones_history:
-        #     for item in line:
-        #         print(f"{item[0].id} {item}")
-        # exit()
-        # exit()
         return self.drones_history
