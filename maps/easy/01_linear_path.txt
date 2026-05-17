@@ -1,11 +1,17 @@
-# Easy Level 1: Simple linear path
-nb_drones: 2
+# BIDIRECTIONAL PIPELINE TEST
 
-start_hub: start 0 0 [color=green max_drones=2]
-hub: waypoint1 1 0 [color=blue]
-hub: waypoint2 2 0 [color=blue]
-end_hub: goal 3 0 [color=red]
+nb_drones: 6
 
-connection: start-waypoint1
-connection: waypoint1-waypoint2
-connection: waypoint2-goal
+# ===== START =====
+start_hub: start 0 0 [max_drones=3]
+hub: a 1 0 [zone=restricted max_drones=1]
+hub: b 2 0 [zone=restricted max_drones=1]
+hub: wait 1 1 [max_drones=1]
+end_hub: goal 3 0
+
+connection: start-a
+connection: b-a
+connection: b-goal
+
+#connection: a-wait
+connection: wait-a

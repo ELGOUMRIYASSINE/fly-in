@@ -9,6 +9,50 @@ class Djsearch:
         self.drones_number = graph.nb_drones
         self.priority = {"normal":1, "priority":0, "restricted": 2}
 
+
+    # def get_paths(self):
+    #     if not self.start or not self.end:
+    #         raise ValueError("No Path can be founded")
+
+    #     # initialisation
+    #     max_paths = min(4, self.drones_number)
+    #     heap = [(0, self.priority[self.start.zone_type], 0, self.start.name,  (self.start.name, ))]
+    #     best_path = None
+    #     margin = 1
+    #     founded_paths = []
+
+    #     while heap and len(founded_paths) < max_paths:
+    #         cost, priority, length, name, path = heapq.heappop(heap)
+
+    #         if best_path and cost > best_path + margin:
+    #             break
+
+    #         if name == self.end.name:
+    #             if best_path is None:
+    #                 best_path = cost
+    #             founded_paths.append(list(path))
+    #             continue
+            
+    #         current = self.graph.zones[name]
+    #         for zone in current.neighbors:
+    #             if zone.name in path or zone.zone_type == "blocked":
+    #                 continue
+    #             new_cost = cost + zone.zone_cost
+    #             new_priority = priority + self.priority[zone.zone_type]
+    #             new_path = path + (zone.name,)
+
+    #             heapq.heappush(heap,
+    #                            (
+    #                                new_cost,
+    #                                new_priority,
+    #                                length + 1,
+    #                                zone.name,
+    #                                new_path
+    #                            ))
+    #     return founded_paths
+
+
+
     def get_paths(self):
         if not self.start or not self.end:
             return []
@@ -28,7 +72,7 @@ class Djsearch:
             if zone_name == self.end.name:
                 if best_cost is None:
                     best_cost = cost
-                founded_paths.append(list(reversed(path)))
+                founded_paths.append(list(path))
                 continue
 
             current = self.graph.zones[zone_name]

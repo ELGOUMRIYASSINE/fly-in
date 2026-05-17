@@ -118,6 +118,7 @@ def validate_order(line):
 
 def parser(input_file):
     line_number = 0
+    data = 0
     config_space = {}
     config_space["hubs"] = []
     config_space["connections"] = []
@@ -145,9 +146,13 @@ def parser(input_file):
                 print(f"Parsing Error: {e} in line {line_number}")
                 exit(1)
             key, value = line.split(":", 1)
+            data += 1
             key = key.strip()
 
             # keys that must not repeat
+            if data == 1 and key != "nb_drones":
+                raise ValueError("First line must define the number of drones.")
+                
             no_repeat_keys[key] = no_repeat_keys.get(key, 0) + 1
             if no_repeat_keys.get(key, 0) > 1 and key in ["nb_drones", "start_hub", "end_hub"]:
                 print(f"Parsing Error: Duplicate key '{key}' found. '{key}' must be defined only once. in line {line_number}")
@@ -262,6 +267,4 @@ def parser(input_file):
     if "end_hub" not in config_space:
         print("Parsing Error: Missing required 'end_hub' definition.")
         exit(1)
-    for hub in config_space["hubs"]:
-        print(hub)
     return config_space
