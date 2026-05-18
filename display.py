@@ -6,27 +6,30 @@ from typing import Any, cast
 
 from graph_builder_test import Graph
 
-DEFAULT_COLOR = "#7dd3fc"
-COLOR_NAMES = colors.CSS4_COLORS
-HARD_COLORS: dict[str, str | list[str]] = {
-    "rainbow":     ["red", "orange", "yellow", "green", "blue", "indigo", "violet"],
-    "neongreen":   "#39ff14",
-    "electricblue": "#7df9ff",
-    "rosegold":    "#b76e79",
-    "amber":       "#f59e0b",
-    "teal":        "#14b8a6",
-    "indigo":      "#6366f1",
-}
-
 
 class Drawer:
+    """Render the graph and drone history using matplotlib controls."""
+    DEFAULT_COLOR = "#7dd3fc"
+    COLOR_NAMES = colors.CSS4_COLORS
+    HARD_COLORS: dict[str, str | list[str]] = {
+        "rainbow":     ["red", "orange", "yellow", "green", "blue", "indigo", "violet"],
+        "neongreen":   "#39ff14",
+        "electricblue": "#7df9ff",
+        "rosegold":    "#b76e79",
+        "amber":       "#f59e0b",
+        "teal":        "#14b8a6",
+        "indigo":      "#6366f1",
+    }
+
     def __init__(self, graph: Graph, history: list[list[tuple[Any, Any, Any]]]) -> None:
+        """Initialize the drawer with graph data and move history."""
         self.graph, self.history, self.turn = graph, history, 0
         self.states = self.make_states()
         self.playing = False
         self.anim: animation.FuncAnimation | None = None
 
     def make_states(self) -> list[dict[int, tuple[Any, ...]]]:
+        """Expand move history into per-turn drone placement states."""
         if self.graph.start is None:
             raise RuntimeError("Graph is missing start hub")
         pos: dict[int, tuple[Any, ...]] = {
@@ -47,10 +50,12 @@ class Drawer:
         return states
 
     def restart_animation(self) -> None:
+        """Reset playback to the first turn and redraw."""
         self.turn = 0
         self.redraw()
 
     def draw_map(self) -> None:
+        """Create the matplotlib figure, controls, and initial render."""
         self.fig, self.ax = plt.subplots(figsize=(10, 6), facecolor="#4A4848")
         plt.subplots_adjust(bottom=0.18)
         # (left, bottom, width, height) 0 -> 1
@@ -71,6 +76,7 @@ class Drawer:
         plt.show()
 
     def toggle_play(self) -> None:
+        """Start or pause animation playback."""
         if self.playing:
             self.playing = False
             if self.anim:
@@ -92,6 +98,7 @@ class Drawer:
         self.fig.canvas.draw_idle()
 
     def _anim_step(self, frame: int) -> list[Any]:
+        """Advance the animation one turn when playing."""
         if not self.playing or self.turn >= len(self.states) - 1:
             self.playing = False
             self.play_btn.label.set_text("Play")
@@ -104,12 +111,14 @@ class Drawer:
         return []
 
     def move(self, value: int) -> None:
+        """Step forward or backward by a single turn."""
         if self.playing:
             self.toggle_play()  # stop playing when manually stepping
         self.turn = max(0, min(self.turn + value, len(self.states) - 1))
         self.redraw()
 
     def get_xy(self, place: tuple[Any, ...]) -> tuple[float, float]:
+        """Return the xy position for a zone or edge midpoint."""
         if place[0] == "zone":
             zone = self.graph.zones[place[1]]
             return zone.x, zone.y
@@ -117,19 +126,21 @@ class Drawer:
         return (a.x + b.x) / 2, (a.y + b.y) / 2
 
     def get_color(self, color: str | None, index: int) -> str:
+        """Resolve a color name or palette entry for a zone index."""
         name = str(color or "").lower().replace(" ", "").replace("_", "")
-        if name in HARD_COLORS and isinstance(HARD_COLORS[name], list):
-            palette = cast(list[str], HARD_COLORS[name])
+        if name in self.HARD_COLORS and isinstance(self.HARD_COLORS[name], list):
+            palette = cast(list[str], self.HARD_COLORS[name])
             return palette[index % len(palette)]
-        if name in HARD_COLORS:
-            return cast(str, HARD_COLORS[name])
-        if name in COLOR_NAMES:
-            return str(COLOR_NAMES[name])
+        if name in self.HARD_COLORS:
+            return cast(str, self.HARD_COLORS[name])
+        if name in self.COLOR_NAMES:
+            return str(self.COLOR_NAMES[name])
         if isinstance(color, str) and colors.is_color_like(color):
             return color
-        return DEFAULT_COLOR
+        return self.DEFAULT_COLOR
 
     def redraw(self) -> None:
+        """Redraw the full scene for the current turn."""
         self.ax.clear()
         self.ax.set_title(f"Turn {self.turn} / {len(self.states) - 1}",
                           fontsize=15, weight="bold", color="#1f2937", pad=14)
@@ -143,7 +154,7 @@ class Drawer:
         for i, zone in enumerate(zones):
             color = self.get_color(zone.color, i)
             self.ax.scatter(zone.x, zone.y, s=700, color=color,
-                            edgecolors="black", linewidth=2, zorder=2,)
+                            edgecolors="white", linewidth=2, zorder=2,)
             p = 0.2
             if i % 2 == 0:
                 p = -0.2

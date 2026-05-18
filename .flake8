@@ -1,4 +1,4 @@
 [flake8]
-exclude = .git,__pycache__,.mypy_cache,.pytest_cache,.venv
+exclude = .git,__pycache__,.mypy_cache,.pytest_cache,.venv, .vscode, newvenv
 max-line-length = 100
 
