@@ -254,6 +254,8 @@ Classic references related to the project:
 
 AI usage:
 
-- AI was used to help explain parts of the implementation, especially the reason for using sorted keys for undirected connection caching.
 - AI was used to help draft and organize this README in English according to the required 42 curriculum structure.
-- AI was not used as a replacement for project-specific implementation decisions; the algorithm, parser, simulation behavior, and visualizer are described from the existing project code.
+
+- AI was used to review and suggest improvements to the code, including refactoring for readability, adding comments, and optimizing certain functions.
+
+- AI was used to generate test cases and edge cases for the map parser and pathfinding logic, ensuring robustness against invalid input and complex graph structures.
