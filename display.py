@@ -12,8 +12,8 @@ class Drawer:
     """Render the graph and drone history using matplotlib controls."""
     DEFAULT_COLOR = "#7dd3fc"
     COLOR_NAMES = colors.CSS4_COLORS  # type: ignore[attr-defined]
-    HARD_COLORS: dict[str, str | list[str]] = {
-        "rainbow":     ["red", "orange", "yellow", "green", "blue", "indigo", "violet"],
+    HARD_COLORS: dict[str, str] = {
+        "rainbow":     "#8F00FF",
         "neongreen":   "#39ff14",
         "electricblue": "#7df9ff",
         "rosegold":    "#b76e79",
@@ -134,7 +134,7 @@ class Drawer:
             palette = cast(list[str], self.HARD_COLORS[name])
             return palette[index % len(palette)]
         if name in self.HARD_COLORS:
-            return cast(str, self.HARD_COLORS[name])
+            return self.HARD_COLORS[name]
         if name in self.COLOR_NAMES:
             return str(self.COLOR_NAMES[name])
         if isinstance(color, str) and colors.is_color_like(color):
