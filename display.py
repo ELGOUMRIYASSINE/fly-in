@@ -1,16 +1,17 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.markers import MarkerStyle
 from matplotlib.widgets import Button
 import matplotlib.animation as animation
 from typing import Any, cast
-
+import random
 from graph_builder_test import Graph
 
 
 class Drawer:
     """Render the graph and drone history using matplotlib controls."""
     DEFAULT_COLOR = "#7dd3fc"
-    COLOR_NAMES = colors.CSS4_COLORS
+    COLOR_NAMES = colors.CSS4_COLORS  # type: ignore[attr-defined]
     HARD_COLORS: dict[str, str | list[str]] = {
         "rainbow":     ["red", "orange", "yellow", "green", "blue", "indigo", "violet"],
         "neongreen":   "#39ff14",
@@ -27,6 +28,7 @@ class Drawer:
         self.states = self.make_states()
         self.playing = False
         self.anim: animation.FuncAnimation | None = None
+        self.drones_colors: dict[int, str] = {}
 
     def make_states(self) -> list[dict[int, tuple[Any, ...]]]:
         """Expand move history into per-turn drone placement states."""
@@ -80,19 +82,19 @@ class Drawer:
         if self.playing:
             self.playing = False
             if self.anim:
-                self.anim.event_source.stop()
-            self.play_btn.label.set_text("Play")
-            self.play_btn.color = "#a3e635"
+                self.anim.event_source.stop()  # type: ignore[attr-defined]
+            self.play_btn.label.set_text("Play")   # type: ignore[attr-defined]
+            self.play_btn.color = "#a3e635"        # type: ignore[attr-defined]
         else:
             if self.turn >= len(self.states) - 1:
                 self.turn = 0  # restart from beginning
             self.playing = True
-            self.play_btn.label.set_text("Pause")
-            self.play_btn.color = "#fca5a5"
+            self.play_btn.label.set_text("Pause")  # type: ignore[attr-defined]
+            self.play_btn.color = "#fca5a5"        # type: ignore[attr-defined]
             self.anim = animation.FuncAnimation(
                 self.fig,
                 self._anim_step,
-                interval=300,  # ms between turns, lower = faster
+                interval=400,  # ms between turns, lower = faster
                 repeat=False
             )
         self.fig.canvas.draw_idle()
@@ -101,10 +103,10 @@ class Drawer:
         """Advance the animation one turn when playing."""
         if not self.playing or self.turn >= len(self.states) - 1:
             self.playing = False
-            self.play_btn.label.set_text("Play")
-            self.play_btn.color = "#a3e635"
+            self.play_btn.label.set_text("Play")  # type: ignore[attr-defined]
+            self.play_btn.color = "#a3e635"       # type: ignore[attr-defined]
             if self.anim:
-                self.anim.event_source.stop()
+                self.anim.event_source.stop()     # type: ignore[attr-defined]
             return []
         self.turn += 1
         self.redraw()
@@ -139,6 +141,10 @@ class Drawer:
             return color
         return self.DEFAULT_COLOR
 
+    def colories(self) -> None:
+        for drone in self.graph.drones:
+            self.drones_colors[drone.id] = random.choice(list(self.COLOR_NAMES.keys()))
+
     def redraw(self) -> None:
         """Redraw the full scene for the current turn."""
         self.ax.clear()
@@ -146,11 +152,11 @@ class Drawer:
                           fontsize=15, weight="bold", color="#1f2937", pad=14)
         zones = list(self.graph.zones.values())
         self.ax.axis("off")
-        self.ax.set_facecolor("#fcf7fb")  # came back to here
+        self.ax.set_facecolor("#fcf7fb")
 
         for link in self.graph.connections:
             self.ax.plot([link.zone_a.x, link.zone_b.x], [link.zone_a.y,
-                         link.zone_b.y], color="#9aa7b8", linewidth=10, zorder=1, alpha=0.7)   
+                         link.zone_b.y], color="#9aa7b8", linewidth=10, zorder=1, alpha=0.7)
         for i, zone in enumerate(zones):
             color = self.get_color(zone.color, i)
             self.ax.scatter(zone.x, zone.y, s=700, color=color,
@@ -173,17 +179,14 @@ class Drawer:
                 ),
                 zorder=3,
             )
-
-        used: dict[tuple[Any, ...], int] = {}
+        if self.drones_colors == {}:
+            self.colories()  # give each drone a random color
         for drone in self.graph.drones:
             place = self.states[self.turn][drone.id]
             x, y = self.get_xy(place)
-            used[place] = used.get(place, 0) + 1
-            count = used[place]
-            x += ((count - 1) % 3 - 1) * 0.22
-            y += ((count - 1) // 3) * 0.22
-            self.ax.scatter(x, y, s=250, color="#f59e0b",
-                            edgecolors="white", linewidth=1.5, zorder=4, marker="X")
+            self.ax.scatter(x, y, s=250, color=self.drones_colors[drone.id],
+                            edgecolors="white", linewidth=1.5, zorder=4,
+                            marker=MarkerStyle("X"))
             self.ax.text(x, y, f"D{drone.id}", ha="center", va="center",
                          fontsize=8, weight="bold", color="white", zorder=5)
 

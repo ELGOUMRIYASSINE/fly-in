@@ -1,1 +1,15 @@
-maps
+maps/
+.vscode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+.idea/

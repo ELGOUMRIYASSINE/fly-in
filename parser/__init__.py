@@ -1,1 +1,1 @@
-"""Parser package."""
+""" Parser for handling graph data. """
