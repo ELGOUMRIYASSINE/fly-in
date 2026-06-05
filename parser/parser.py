@@ -142,7 +142,7 @@ def validate_order(line: str) -> bool:
 
 
 def parser(input_file: str) -> dict[str, Any]:
-    line_number = 0
+    i = 0
     data = 0
     config_space: dict[str, Any] = {}
     config_space["hubs"] = []
@@ -156,8 +156,7 @@ def parser(input_file: str) -> dict[str, Any]:
     known_hub_names: set[str] = set()
 
     with open(f"{input_file}", "r") as file:
-        for line in file:
-            line_number += 1
+        for i, line in enumerate(file):
             line = line.strip()
 
             if line.startswith("#") or not line:
@@ -168,7 +167,7 @@ def parser(input_file: str) -> dict[str, Any]:
             try:
                 use_default = validate_order(line)
             except ParsingError as e:
-                print(f"Parsing Error: {e} in line {line_number}")
+                print(f"Parsing Error: {e} in line {i}")
                 exit(1)
             key, value = line.split(":", 1)
             data += 1
@@ -182,7 +181,7 @@ def parser(input_file: str) -> dict[str, Any]:
             if no_repeat_keys.get(key, 0) > 1 and key in ["nb_drones", "start_hub", "end_hub"]:
                 print(
                     f"Parsing Error: Duplicate key '{key}' found. "
-                    f"'{key}' must be defined only once. in line {line_number}"
+                    f"'{key}' must be defined only once. in line {i}"
                 )
                 exit(1)
 
@@ -201,7 +200,7 @@ def parser(input_file: str) -> dict[str, Any]:
                 if "-" in hub_name:
                     print(
                         f"Parsing Error: Hub name '{hub_name}' must not "
-                        f"contain dashes. in line {line_number}"
+                        f"contain dashes. in line {i}"
                     )
                     exit(1)
 
@@ -209,7 +208,7 @@ def parser(input_file: str) -> dict[str, Any]:
                 if hub_name in known_hub_names:
                     print(
                         f"Parsing Error: Duplicate hub name '{hub_name}'. "
-                        f"in line {line_number}"
+                        f"in line {i}"
                     )
                     exit(1)
                 known_hub_names.add(hub_name)
@@ -264,13 +263,13 @@ def parser(input_file: str) -> dict[str, Any]:
                 if from_hub not in known_hub_names:
                     print(
                         f"Parsing Error: Connection references undefined hub "
-                        f"'{from_hub}'. in line {line_number}"
+                        f"'{from_hub}'. in line {i}"
                     )
                     exit(1)
                 if to_hub not in known_hub_names:
                     print(
                         f"Parsing Error: Connection references undefined hub "
-                        f"'{to_hub}'. in line {line_number}"
+                        f"'{to_hub}'. in line {i}"
                     )
                     exit(1)
 
@@ -279,7 +278,7 @@ def parser(input_file: str) -> dict[str, Any]:
                 if conn_key in seen_connections:
                     print(
                         f"Parsing Error: Duplicate connection '{from_hub}-{to_hub}'. "
-                        f"in line {line_number}"
+                        f"in line {i}"
                     )
                     exit(1)
                 seen_connections.add(conn_key)

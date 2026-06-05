@@ -51,8 +51,8 @@ class Engine:
             paths = path_finder.Djsearch(graph).get_paths()
             mover = drone_mover.DroneMover(graph, paths)
             history = mover.drone_mover()
-            displayer = display.Drawer(graph, history)
-            displayer.draw_map()
+            displayer = display.DroneVisualizer(graph, history)
+            displayer.run()
         except Exception as e:
             print(e)
 

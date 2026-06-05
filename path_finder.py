@@ -20,12 +20,10 @@ class Djsearch:
             return []
 
         max_paths = min(4, self.drones_number)
-        cost_margin = 1
-        heap: list[HeapItem] = [
-            (0, self.priority[self.start.zone_type], 1, self.start.name, (self.start.name,))
-        ]
+        cost_margin = 1  # stay 
+        heap = [(0, self.priority[self.start.zone_type], 1, self.start.name, (self.start.name,))]
         best_cost = None
-        founded_paths: list[Path] = []
+        founded_paths = []
 
         while heap and len(founded_paths) < max_paths:
             cost, priority, length, zone_name, path = heapq.heappop(heap)
