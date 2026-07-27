@@ -8,23 +8,6 @@ Fly-in is a drone routing and simulation project. The goal is to move a fleet of
 
 The program reads a map file, builds an internal graph, searches for efficient routes, assigns drones to selected paths, simulates the movement turn by turn, and displays the result with an interactive visual map.
 
-• The very first line must be italicized and read: This project has been created as part
-of the 42 curriculum by <login1>[, <login2>[, <login3>[...]]].
-• A “Description” section that clearly presents the project, including its goal and a
-brief overview.
-• An “Instructions” section containing any relevant information about compilation,
-installation, and/or execution.
-• A “Resources” section listing classic references related to the topic (documentation, articles, tutorials, etc.), as well as a description of how AI was used —
-specifying for which tasks and which parts of the project.
-➠ Additional sections may be required depending on the project (e.g., usage
-examples, feature list, technical choices, etc.).
-Any required additions will be explicitly listed below.
-• A detailed description of your algorithm choices and implementation strategy must
-also be included.
-• Documentation of the visual representation features and how they enhance the user
-experience.
-Your README must be written in English. turn, and displays the result with an interactive visual map.
-
 The project is inspired by classic pathfinding and flow problems: the challenge is not only to find a path, but to coordinate several drones so they do not exceed the capacity of zones or connections.
 
 ## Instructions
